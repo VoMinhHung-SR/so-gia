@@ -16,10 +16,14 @@ flutter doctor
 ## Demo trên máy (không cần điện thoại)
 
 ```bash
-flutter run -d linux    # cửa sổ desktop
+source /mnt/d9817672-fa4f-44b5-96e9-07bd39acf312/dev-tools/env.sh
+cd /mnt/d9817672-fa4f-44b5-96e9-07bd39acf312/PersonalProject/so-gia
+flutter run -d linux    # cửa sổ desktop (đã cài clang/cmake/…)
 # hoặc
 flutter run -d chrome
 ```
+
+> Quét barcode (camera) chỉ trên Android/iOS. Trên Linux/Chrome: gõ mã tay / tìm theo tên.
 
 ## Lệnh thường dùng
 
@@ -28,6 +32,7 @@ flutter pub get
 dart run build_runner build      # sinh code Drift (*.g.dart)
 flutter analyze
 flutter test
-flutter run -d linux
+flutter run -d chrome            # demo trên máy
+flutter run                      # điện thoại Android (USB debugging)
 flutter build apk --debug
 ```
