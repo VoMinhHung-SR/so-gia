@@ -1,10 +1,12 @@
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/items/item_detail_screen.dart';
 import '../features/items/item_form_screen.dart';
 import '../features/items/items_list_screen.dart';
+import '../features/pricing/compare_items_screen.dart';
 import '../features/scan/scan_screen.dart';
+import '../features/settings/settings_screen.dart';
+import '../features/suppliers/suppliers_screen.dart';
 
 final appRouter = GoRouter(
   routes: [
@@ -15,6 +17,21 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/scan',
       builder: (context, state) => const ScanScreen(),
+    ),
+    GoRoute(
+      path: '/suppliers',
+      builder: (context, state) => const SuppliersScreen(),
+    ),
+    GoRoute(
+      path: '/settings',
+      builder: (context, state) => const SettingsScreen(),
+    ),
+    GoRoute(
+      path: '/compare',
+      builder: (context, state) {
+        final cat = state.uri.queryParameters['category'];
+        return CompareItemsScreen(category: cat);
+      },
     ),
     GoRoute(
       path: '/items/new',
@@ -40,11 +57,3 @@ final appRouter = GoRouter(
     ),
   ],
 );
-
-/// Quick entry for weighed goods from the list FAB menu (optional).
-void openWeighedItemForm(BuildContext context) {
-  context.push(
-    '/items/new',
-    extra: const ItemFormArgs(forceWeighed: true),
-  );
-}

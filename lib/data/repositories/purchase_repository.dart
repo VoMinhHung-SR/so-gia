@@ -9,6 +9,22 @@ final purchaseRepositoryProvider = Provider<PurchaseRepository>((ref) {
   return PurchaseRepository(ref.watch(databaseProvider));
 });
 
+class SupplierPriceStat {
+  const SupplierPriceStat({
+    required this.supplierId,
+    required this.supplierName,
+    required this.latestPrice,
+    required this.averagePrice,
+    required this.count,
+  });
+
+  final String supplierId;
+  final String supplierName;
+  final int latestPrice;
+  final double averagePrice;
+  final int count;
+}
+
 class PurchaseRepository {
   PurchaseRepository(this._db);
 
@@ -48,5 +64,45 @@ class PurchaseRepository {
 
     return (await _db.listPurchasesForItem(itemId))
         .firstWhere((p) => p.id == id);
+  }
+
+  /// Latest cost + supplier for prefilling the entry form.
+  Future<({int? costPrice, String? supplierId})> prefillForItem(
+    String itemId,
+  ) async {
+    final latest = await _db.latestPurchaseForItem(itemId);
+    return (costPrice: latest?.costPrice, supplierId: latest?.supplierId);
+  }
+
+  Future<List<SupplierPriceStat>> compareSuppliers(String itemId) async {
+    final purchases = await _db.listPurchasesForItem(itemId);
+    final bySupplier = <String, List<Purchase>>{};
+    for (final p in purchases) {
+      final sid = p.supplierId;
+      if (sid == null) continue;
+      bySupplier.putIfAbsent(sid, () => []).add(p);
+    }
+
+    final stats = <SupplierPriceStat>[];
+    for (final entry in bySupplier.entries) {
+      final list = entry.value
+        ..sort((a, b) => b.date.compareTo(a.date));
+      final supplier = await _db.getSupplierById(entry.key);
+      if (supplier == null) continue;
+      final avg =
+          list.map((e) => e.costPrice).reduce((a, b) => a + b) / list.length;
+      stats.add(
+        SupplierPriceStat(
+          supplierId: entry.key,
+          supplierName: supplier.name,
+          latestPrice: list.first.costPrice,
+          averagePrice: avg,
+          count: list.length,
+        ),
+      );
+    }
+
+    stats.sort((a, b) => a.latestPrice.compareTo(b.latestPrice));
+    return stats;
   }
 }

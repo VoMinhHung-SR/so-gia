@@ -50,9 +50,24 @@ class ItemsListScreen extends ConsumerWidget {
         title: const Text('Sổ giá'),
         actions: [
           IconButton(
+            tooltip: 'Nhà cung cấp',
+            icon: const Icon(Icons.local_shipping_outlined),
+            onPressed: () => context.push('/suppliers'),
+          ),
+          IconButton(
+            tooltip: 'So sánh đơn giá',
+            icon: const Icon(Icons.compare_arrows),
+            onPressed: () => context.push('/compare'),
+          ),
+          IconButton(
             tooltip: 'Quét / tra mã',
             icon: const Icon(Icons.qr_code_scanner),
             onPressed: () => context.push('/scan'),
+          ),
+          IconButton(
+            tooltip: 'Cài đặt',
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: () => context.push('/settings'),
           ),
         ],
       ),

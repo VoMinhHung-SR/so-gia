@@ -108,4 +108,65 @@ class AppDatabase extends _$AppDatabase {
   Future<void> insertPurchase(PurchasesCompanion row) {
     return into(purchases).insert(row);
   }
+
+  // --- Suppliers ---
+
+  Stream<List<Supplier>> watchActiveSuppliers() {
+    return (select(suppliers)
+          ..where((t) => t.deletedAt.isNull())
+          ..orderBy([(t) => OrderingTerm.asc(t.name)]))
+        .watch();
+  }
+
+  Future<List<Supplier>> listActiveSuppliers() {
+    return (select(suppliers)
+          ..where((t) => t.deletedAt.isNull())
+          ..orderBy([(t) => OrderingTerm.asc(t.name)]))
+        .get();
+  }
+
+  Future<Supplier?> getSupplierById(String id) {
+    return (select(suppliers)
+          ..where((t) => t.id.equals(id) & t.deletedAt.isNull()))
+        .getSingleOrNull();
+  }
+
+  Future<void> upsertSupplier(SuppliersCompanion row) {
+    return into(suppliers).insertOnConflictUpdate(row);
+  }
+
+  Future<void> softDeleteSupplier(String id) async {
+    final now = DateTime.now().toUtc();
+    await (update(suppliers)..where((t) => t.id.equals(id))).write(
+      SuppliersCompanion(
+        deletedAt: Value(now),
+        updatedAt: Value(now),
+      ),
+    );
+  }
+
+  // --- Sell prices ---
+
+  Future<SellPrice?> currentSellPrice(String itemId, {DateTime? asOf}) {
+    final when = (asOf ?? DateTime.now()).toUtc();
+    return (select(sellPrices)
+          ..where(
+            (t) =>
+                t.itemId.equals(itemId) & t.effectiveFrom.isSmallerOrEqualValue(when),
+          )
+          ..orderBy([(t) => OrderingTerm.desc(t.effectiveFrom)])
+          ..limit(1))
+        .getSingleOrNull();
+  }
+
+  Stream<List<SellPrice>> watchSellPrices(String itemId) {
+    return (select(sellPrices)
+          ..where((t) => t.itemId.equals(itemId))
+          ..orderBy([(t) => OrderingTerm.desc(t.effectiveFrom)]))
+        .watch();
+  }
+
+  Future<void> insertSellPrice(SellPricesCompanion row) {
+    return into(sellPrices).insert(row);
+  }
 }
