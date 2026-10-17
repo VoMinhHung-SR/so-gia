@@ -6,8 +6,10 @@ import 'package:intl/intl.dart';
 import '../../core/money.dart';
 import '../../core/pricing.dart';
 import '../../data/db/tables.dart';
+import '../../data/ref/supermarket_sources.dart';
 import '../../data/repositories/item_repository.dart';
 import '../../data/repositories/purchase_repository.dart';
+import '../../data/repositories/ref_price_repository.dart';
 import '../../data/repositories/sell_price_repository.dart';
 import '../../data/repositories/supplier_repository.dart';
 import '../pricing/sell_price_calculator.dart';
@@ -143,6 +145,7 @@ class _ItemDetailBodyState extends ConsumerState<_ItemDetailBody> {
     final suppliers = ref.watch(suppliersStreamProvider);
     final sellAsync = ref.watch(currentSellProvider(item.id));
     final compare = ref.watch(supplierCompareProvider(item.id));
+    final refPrices = ref.watch(latestRefPricesProvider(item.id));
 
     final meta = [
       if (item.brand != null) item.brand!,
@@ -161,6 +164,14 @@ class _ItemDetailBodyState extends ConsumerState<_ItemDetailBody> {
       appBar: AppBar(
         title: Text(item.name),
         actions: [
+          IconButton(
+            tooltip: 'Giá bán lẻ siêu thị',
+            icon: const Icon(Icons.storefront_outlined),
+            onPressed: () async {
+              await context.push('/items/${item.id}/ref-price');
+              ref.invalidate(latestRefPricesProvider(item.id));
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.edit),
             onPressed: () => context.push('/items/${item.id}/edit'),
@@ -192,6 +203,54 @@ class _ItemDetailBodyState extends ConsumerState<_ItemDetailBody> {
                   ),
             ),
           ],
+          const SizedBox(height: 12),
+          Text(
+            'Giá bán lẻ siêu thị (mốc so sánh)',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          refPrices.when(
+            loading: () => const LinearProgressIndicator(),
+            error: (e, _) => Text('$e'),
+            data: (list) {
+              if (list.isEmpty) {
+                return TextButton.icon(
+                  onPressed: () => context.push('/items/${item.id}/ref-price'),
+                  icon: const Icon(Icons.add),
+                  label: const Text('Tra / lưu giá siêu thị'),
+                );
+              }
+              final latest = list.first;
+              final age = DateTime.now().toUtc().difference(latest.observedAt);
+              final stale = age.inDays > 30;
+              final yourCost = costForCalc > 0 ? costForCalc : null;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Opacity(
+                    opacity: stale ? 0.55 : 1,
+                    child: ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(
+                        '${formatVnd(latest.price)} · ${labelForRefSource(latest.source)}',
+                      ),
+                      subtitle: Text(
+                        yourCost == null
+                            ? '${age.inDays} ngày trước'
+                            : 'Giá nhập của bạn ${formatVnd(yourCost)}'
+                                ' · siêu thị ${age.inDays} ngày trước'
+                                '${stale ? ' (cũ)' : ''}',
+                      ),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.refresh),
+                        onPressed: () =>
+                            context.push('/items/${item.id}/ref-price'),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
           const SizedBox(height: 20),
           Text('Ghi giá nhập', style: Theme.of(context).textTheme.titleMedium),
           if (_prefilled)

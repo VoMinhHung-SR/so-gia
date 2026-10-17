@@ -59,6 +59,15 @@ class AppDatabase extends _$AppDatabase {
         .getSingleOrNull();
   }
 
+  /// Includes soft-deleted rows (backup merge).
+  Future<Item?> getItemRowById(String id) {
+    return (select(items)..where((t) => t.id.equals(id))).getSingleOrNull();
+  }
+
+  Future<Supplier?> getSupplierRowById(String id) {
+    return (select(suppliers)..where((t) => t.id.equals(id))).getSingleOrNull();
+  }
+
   Future<Item?> getItemByBarcode(String barcode) {
     return (select(items)
           ..where(
@@ -168,5 +177,63 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> insertSellPrice(SellPricesCompanion row) {
     return into(sellPrices).insert(row);
+  }
+
+  // --- Ref prices ---
+
+  Stream<List<RefPrice>> watchRefPricesForItem(String itemId) {
+    return (select(refPrices)
+          ..where((t) => t.itemId.equals(itemId))
+          ..orderBy([(t) => OrderingTerm.desc(t.observedAt)]))
+        .watch();
+  }
+
+  Future<List<RefPrice>> listRefPricesForItem(String itemId) {
+    return (select(refPrices)
+          ..where((t) => t.itemId.equals(itemId))
+          ..orderBy([(t) => OrderingTerm.desc(t.observedAt)]))
+        .get();
+  }
+
+  Future<RefPrice?> latestRefPriceForItem(String itemId) {
+    return (select(refPrices)
+          ..where((t) => t.itemId.equals(itemId))
+          ..orderBy([(t) => OrderingTerm.desc(t.observedAt)])
+          ..limit(1))
+        .getSingleOrNull();
+  }
+
+  Future<void> insertRefPrice(RefPricesCompanion row) {
+    return into(refPrices).insert(row);
+  }
+
+  // --- Backup helpers ---
+
+  Future<List<SellPrice>> listAllSellPrices() => select(sellPrices).get();
+
+  Future<List<RefPrice>> listAllRefPrices() => select(refPrices).get();
+
+  Future<void> upsertPurchase(PurchasesCompanion row) {
+    return into(purchases).insertOnConflictUpdate(row);
+  }
+
+  Future<void> upsertRefPrice(RefPricesCompanion row) {
+    return into(refPrices).insertOnConflictUpdate(row);
+  }
+
+  Future<void> upsertSellPrice(SellPricesCompanion row) {
+    return into(sellPrices).insertOnConflictUpdate(row);
+  }
+
+  Future<Purchase?> getPurchaseById(String id) {
+    return (select(purchases)..where((t) => t.id.equals(id))).getSingleOrNull();
+  }
+
+  Future<RefPrice?> getRefPriceById(String id) {
+    return (select(refPrices)..where((t) => t.id.equals(id))).getSingleOrNull();
+  }
+
+  Future<SellPrice?> getSellPriceById(String id) {
+    return (select(sellPrices)..where((t) => t.id.equals(id))).getSingleOrNull();
   }
 }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/money.dart';
+import '../../core/settings.dart';
 import '../../core/vietnamese.dart';
 import '../../data/db/tables.dart';
 import '../../data/repositories/item_repository.dart';
@@ -65,6 +66,11 @@ class ItemsListScreen extends ConsumerWidget {
             onPressed: () => context.push('/scan'),
           ),
           IconButton(
+            tooltip: 'Sao lưu',
+            icon: const Icon(Icons.backup_outlined),
+            onPressed: () => context.push('/backup'),
+          ),
+          IconButton(
             tooltip: 'Cài đặt',
             icon: const Icon(Icons.settings_outlined),
             onPressed: () => context.push('/settings'),
@@ -73,6 +79,20 @@ class ItemsListScreen extends ConsumerWidget {
       ),
       body: Column(
         children: [
+          if (ref.watch(appSettingsProvider).needsBackupReminder)
+            Card(
+              margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+              color: Theme.of(context).colorScheme.errorContainer,
+              child: ListTile(
+                dense: true,
+                title: const Text('Nên xuất sao lưu CSV'),
+                subtitle: const Text('Đã > 7 ngày hoặc chưa từng xuất.'),
+                trailing: TextButton(
+                  onPressed: () => context.push('/backup'),
+                  child: const Text('Sao lưu'),
+                ),
+              ),
+            ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             child: TextField(

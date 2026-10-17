@@ -1,9 +1,11 @@
 import 'package:go_router/go_router.dart';
 
+import '../features/backup/backup_screen.dart';
 import '../features/items/item_detail_screen.dart';
 import '../features/items/item_form_screen.dart';
 import '../features/items/items_list_screen.dart';
 import '../features/pricing/compare_items_screen.dart';
+import '../features/ref_prices/ref_price_lookup_screen.dart';
 import '../features/scan/scan_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/suppliers/suppliers_screen.dart';
@@ -25,6 +27,10 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/settings',
       builder: (context, state) => const SettingsScreen(),
+    ),
+    GoRoute(
+      path: '/backup',
+      builder: (context, state) => const BackupScreen(),
     ),
     GoRoute(
       path: '/compare',
@@ -53,6 +59,13 @@ final appRouter = GoRouter(
       builder: (context, state) {
         final id = state.pathParameters['id']!;
         return ItemFormScreen(args: ItemFormArgs(editId: id));
+      },
+    ),
+    GoRoute(
+      path: '/items/:id/ref-price',
+      builder: (context, state) {
+        final id = state.pathParameters['id']!;
+        return RefPriceLookupScreen(itemId: id);
       },
     ),
   ],

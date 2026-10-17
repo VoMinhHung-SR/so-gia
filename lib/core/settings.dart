@@ -17,6 +17,7 @@ const Map<String, double> kDefaultCategoryMarkups = {
 const _kDefaultMarkup = 'default_markup_pct';
 const _kRoundStep = 'round_step';
 const _kRoundMode = 'round_mode';
+const _kLastBackupAt = 'last_backup_at';
 
 class AppSettings {
   AppSettings(this._prefs);
@@ -42,6 +43,20 @@ class AppSettings {
         _kRoundMode,
         mode == RoundMode.nearest ? 'nearest' : 'up',
       );
+
+  DateTime? get lastBackupAt {
+    final raw = _prefs.getString(_kLastBackupAt);
+    return raw == null ? null : DateTime.tryParse(raw);
+  }
+
+  Future<void> markBackupNow() =>
+      _prefs.setString(_kLastBackupAt, DateTime.now().toUtc().toIso8601String());
+
+  bool get needsBackupReminder {
+    final last = lastBackupAt;
+    if (last == null) return true;
+    return DateTime.now().toUtc().difference(last).inDays >= 7;
+  }
 
   /// Resolve markup for an item category; falls back to global default.
   double markupForCategory(String? category) {
