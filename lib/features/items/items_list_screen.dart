@@ -5,9 +5,11 @@ import 'package:go_router/go_router.dart';
 import '../../core/money.dart';
 import '../../core/settings.dart';
 import '../../core/vietnamese.dart';
+import '../../data/db/database_provider.dart';
 import '../../data/db/tables.dart';
 import '../../data/repositories/item_repository.dart';
 import '../../data/repositories/purchase_repository.dart';
+import '../../data/seed/demo_seed.dart';
 import 'item_form_screen.dart';
 
 class SearchQuery extends Notifier<String> {
@@ -110,9 +112,7 @@ class ItemsListScreen extends ConsumerWidget {
               error: (e, _) => Center(child: Text('Lỗi: $e')),
               data: (list) {
                 if (list.isEmpty) {
-                  return const Center(
-                    child: Text('Chưa có mặt hàng. Quét mã hoặc thêm mới.'),
-                  );
+                  return _EmptyCatalog(ref: ref);
                 }
                 return ListView.separated(
                   itemCount: list.length,
@@ -218,3 +218,76 @@ String _unitLabel(UnitType t) => switch (t) {
       UnitType.kg => 'kg',
       UnitType.piece => 'cái',
     };
+
+class _EmptyCatalog extends StatefulWidget {
+  const _EmptyCatalog({required this.ref});
+
+  final WidgetRef ref;
+
+  @override
+  State<_EmptyCatalog> createState() => _EmptyCatalogState();
+}
+
+class _EmptyCatalogState extends State<_EmptyCatalog> {
+  bool _busy = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Chưa có mặt hàng',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Quét mã, thêm mới, hoặc nạp bộ demo ~24 SKU để thử P4.',
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              onPressed: _busy
+                  ? null
+                  : () async {
+                      setState(() => _busy = true);
+                      try {
+                        final r = await DemoSeedService(
+                          widget.ref.read(databaseProvider),
+                        ).seedIfEmpty();
+                        if (!context.mounted) return;
+                        if (r == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Đã có dữ liệu')),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Đã nạp ${r.items} mặt hàng · ${r.suppliers} NCC',
+                              ),
+                            ),
+                          );
+                        }
+                      } finally {
+                        if (mounted) setState(() => _busy = false);
+                      }
+                    },
+              icon: const Icon(Icons.dataset),
+              label: Text(_busy ? 'Đang nạp…' : 'Nạp dữ liệu demo'),
+            ),
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: () => context.push('/scan'),
+              icon: const Icon(Icons.qr_code_scanner),
+              label: const Text('Quét / tra mã'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
