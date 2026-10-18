@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -9,7 +11,14 @@ void main() {
   test('migrate v1 items → catalog + store_items keeps purchase totals', () async {
     driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
 
-    final sqlite = sqlite3.openInMemory();
+    final dir = await Directory.systemTemp.createTemp('so_gia_mig_');
+    addTearDown(() async {
+      if (await dir.exists()) await dir.delete(recursive: true);
+    });
+    final file = File('${dir.path}/v1.sqlite');
+
+    // Build a v1 DB with raw sqlite3, then close before Drift opens it.
+    final sqlite = sqlite3.open(file.path);
     sqlite.execute('''
 CREATE TABLE items (
   id TEXT NOT NULL PRIMARY KEY,
@@ -111,8 +120,9 @@ CREATE TABLE sell_prices (
       ['r-1', 'item-1', 'bhx', 11000, nowMs],
     );
     sqlite.execute('PRAGMA user_version = 1');
+    sqlite.close();
 
-    final db = AppDatabase(NativeDatabase.opened(sqlite));
+    final db = AppDatabase(NativeDatabase(file));
     addTearDown(db.close);
 
     expect(await db.ping(), isTrue);
