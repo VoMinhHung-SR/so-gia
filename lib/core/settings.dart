@@ -18,6 +18,9 @@ const _kDefaultMarkup = 'default_markup_pct';
 const _kRoundStep = 'round_step';
 const _kRoundMode = 'round_mode';
 const _kLastBackupAt = 'last_backup_at';
+const _kLargeText = 'large_text';
+const _kHighContrast = 'high_contrast';
+const _kStartOnScan = 'start_on_scan';
 
 class AppSettings {
   AppSettings(this._prefs);
@@ -58,6 +61,19 @@ class AppSettings {
     return DateTime.now().toUtc().difference(last).inDays >= 7;
   }
 
+  bool get largeText => _prefs.getBool(_kLargeText) ?? false;
+
+  Future<void> setLargeText(bool v) => _prefs.setBool(_kLargeText, v);
+
+  bool get highContrast => _prefs.getBool(_kHighContrast) ?? false;
+
+  Future<void> setHighContrast(bool v) => _prefs.setBool(_kHighContrast, v);
+
+  /// Cold start opens scan/lookup screen (useful at the stall).
+  bool get startOnScan => _prefs.getBool(_kStartOnScan) ?? false;
+
+  Future<void> setStartOnScan(bool v) => _prefs.setBool(_kStartOnScan, v);
+
   /// Resolve markup for an item category; falls back to global default.
   double markupForCategory(String? category) {
     if (category == null || category.trim().isEmpty) return defaultMarkupPct;
@@ -78,3 +94,13 @@ final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
 final appSettingsProvider = Provider<AppSettings>((ref) {
   return AppSettings(ref.watch(sharedPreferencesProvider));
 });
+
+/// Bumps when UX prefs change so [MaterialApp] rebuilds theme / initial route.
+class UiPrefs extends Notifier<int> {
+  @override
+  int build() => 0;
+
+  void bump() => state++;
+}
+
+final uiPrefsProvider = NotifierProvider<UiPrefs, int>(UiPrefs.new);
