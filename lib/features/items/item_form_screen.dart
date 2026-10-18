@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../data/db/tables.dart';
 import '../../data/off/open_food_facts_client.dart';
 import '../../data/repositories/item_repository.dart';
+import '../../data/repositories/store_repository.dart';
 
 class ItemFormArgs {
   const ItemFormArgs({
@@ -39,9 +40,9 @@ class _ItemFormScreenState extends ConsumerState<ItemFormScreen> {
 
   UnitType _unitType = UnitType.piece;
   bool _isWeighed = false;
-  ItemSource _source = ItemSource.manual;
-  String? _imageUrl;
+  CatalogSource _source = CatalogSource.user;
   String? _existingId;
+  String? _catalogId;
   bool _loading = false;
   bool _saving = false;
 
@@ -58,7 +59,8 @@ class _ItemFormScreenState extends ConsumerState<ItemFormScreen> {
       final item = await ref.read(itemRepositoryProvider).getById(args.editId!);
       if (item != null && mounted) {
         _existingId = item.id;
-        _name.text = item.name;
+        _catalogId = item.catalogId;
+        _name.text = item.resolvedName;
         _brand.text = item.brand ?? '';
         _barcode.text = item.barcode ?? '';
         _unitSize.text = item.unitSize?.toString() ?? '';
@@ -66,7 +68,6 @@ class _ItemFormScreenState extends ConsumerState<ItemFormScreen> {
         _unitType = item.unitType;
         _isWeighed = item.isWeighed;
         _source = item.source;
-        _imageUrl = item.imageUrl;
       }
       if (mounted) setState(() => _loading = false);
       return;
@@ -88,8 +89,7 @@ class _ItemFormScreenState extends ConsumerState<ItemFormScreen> {
       _brand.text = off.brand ?? '';
       if (off.unitSize != null) _unitSize.text = off.unitSize.toString();
       if (off.unitType != null) _unitType = off.unitType!;
-      _imageUrl = off.imageUrl;
-      _source = ItemSource.off;
+      _source = CatalogSource.off;
     }
   }
 
@@ -111,8 +111,11 @@ class _ItemFormScreenState extends ConsumerState<ItemFormScreen> {
       final sizeRaw = _unitSize.text.trim();
       final size = sizeRaw.isEmpty ? null : double.tryParse(sizeRaw.replaceAll(',', '.'));
 
+      final storeId = ref.read(currentStoreIdProvider);
       final item = await ref.read(itemRepositoryProvider).saveItem(
+            storeId: storeId,
             id: _existingId,
+            catalogId: _catalogId,
             barcode: _barcode.text,
             name: _name.text,
             brand: _brand.text,
@@ -121,7 +124,6 @@ class _ItemFormScreenState extends ConsumerState<ItemFormScreen> {
             category: _category.text,
             isWeighed: _isWeighed,
             source: _source,
-            imageUrl: _imageUrl,
           );
 
       if (!mounted) return;

@@ -19,6 +19,7 @@
     {"sort": 15, "id": "dong-lanh", "name": "Đồ đông lạnh, chế biến sẵn", "is_weighed": false, "margin_pct": 12},
     {"sort": 16, "id": "giat-tay", "name": "Giặt giũ, vệ sinh nhà cửa", "is_weighed": false, "margin_pct": 15},
     {"sort": 17, "id": "giay-tui", "name": "Giấy, túi, đồ dùng một lần", "is_weighed": false, "margin_pct": 15},
-    {"sort": 18, "id": "cham-soc-ca-nhan", "name": "Chăm sóc cá nhân", "is_weighed": false, "margin_pct": 15}
+    {"sort": 18, "id": "cham-soc-ca-nhan", "name": "Chăm sóc cá nhân", "is_weighed": false, "margin_pct": 15},
+    {"sort": 99, "id": "khac", "name": "Khác", "is_weighed": false, "margin_pct": 20}
   ]
 }

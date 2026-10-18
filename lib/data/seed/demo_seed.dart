@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 
 import '../../core/ids.dart';
 import '../db/app_database.dart';
+import '../db/category_seed.dart';
 import '../db/tables.dart';
 
 class DemoSeedResult {
@@ -23,17 +24,19 @@ class DemoSeedService {
 
   final AppDatabase _db;
 
-  Future<DemoSeedResult?> seedIfEmpty() async {
-    final existing = await _db.listActiveItems();
+  Future<DemoSeedResult?> seedIfEmpty({String? storeId}) async {
+    final sid = storeId ?? await ensureDefaultStore(_db);
+    final existing = await _db.listActiveItems(sid);
     if (existing.isNotEmpty) return null;
-    return seed(force: true);
+    return seed(force: true, storeId: sid);
   }
 
-  Future<DemoSeedResult> seed({bool force = false}) async {
+  Future<DemoSeedResult> seed({bool force = false, String? storeId}) async {
+    final sid = storeId ?? await ensureDefaultStore(_db);
     if (!force) {
-      final existing = await _db.listActiveItems();
+      final existing = await _db.listActiveItems(sid);
       if (existing.isNotEmpty) {
-        return DemoSeedResult(
+        return const DemoSeedResult(
           suppliers: 0,
           items: 0,
           purchases: 0,
@@ -52,6 +55,7 @@ class DemoSeedService {
       return _db.upsertSupplier(
         SuppliersCompanion.insert(
           id: id,
+          storeId: sid,
           name: name,
           phone: Value(phone),
           createdAt: now,
@@ -76,23 +80,18 @@ class DemoSeedService {
       String? category,
       bool weighed = false,
     }) async {
-      final id = newId();
-      await _db.upsertItem(
-        ItemsCompanion.insert(
-          id: id,
-          name: name,
-          unitType: unitType,
-          source: ItemSource.manual,
-          createdAt: now,
-          updatedAt: now,
-          barcode: Value(barcode),
-          brand: Value(brand),
-          unitSize: Value(unitSize),
-          category: Value(category),
-          isWeighed: Value(weighed),
-        ),
+      final saved = await _db.saveStoreItem(
+        storeId: sid,
+        barcode: barcode,
+        name: name,
+        brand: brand,
+        unitSize: unitSize,
+        unitType: unitType,
+        categoryId: mapLegacyCategoryId(category),
+        isWeighed: weighed,
+        source: CatalogSource.user,
       );
-      return id;
+      return saved.id;
     }
 
     Future<void> buy(
@@ -365,7 +364,7 @@ class DemoSeedService {
     await _db.insertRefPrice(
       RefPricesCompanion.insert(
         id: newId(),
-        itemId: coca,
+        catalogId: coca,
         source: RefPriceSource.bhx,
         price: 11000,
         unitSize: const Value(330),
@@ -374,7 +373,7 @@ class DemoSeedService {
       ),
     );
 
-    final items = await _db.listActiveItems();
+    final items = await _db.listActiveItems(sid);
     return DemoSeedResult(
       suppliers: 3,
       items: items.length,

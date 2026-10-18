@@ -11,8 +11,8 @@ final refPriceRepositoryProvider = Provider<RefPriceRepository>((ref) {
 });
 
 final latestRefPricesProvider =
-    StreamProvider.autoDispose.family<List<RefPrice>, String>((ref, itemId) {
-  return ref.watch(refPriceRepositoryProvider).watchForItem(itemId);
+    StreamProvider.autoDispose.family<List<RefPrice>, String>((ref, catalogId) {
+  return ref.watch(refPriceRepositoryProvider).watchForCatalog(catalogId);
 });
 
 class RefPriceRepository {
@@ -20,14 +20,14 @@ class RefPriceRepository {
 
   final AppDatabase _db;
 
-  Stream<List<RefPrice>> watchForItem(String itemId) =>
-      _db.watchRefPricesForItem(itemId);
+  Stream<List<RefPrice>> watchForCatalog(String catalogId) =>
+      _db.watchRefPricesForCatalog(catalogId);
 
-  Future<RefPrice?> latestForItem(String itemId) =>
-      _db.latestRefPriceForItem(itemId);
+  Future<RefPrice?> latestForCatalog(String catalogId) =>
+      _db.latestRefPriceForCatalog(catalogId);
 
   Future<RefPrice> save({
-    required String itemId,
+    required String catalogId,
     required RefPriceSource source,
     required int price,
     double? unitSize,
@@ -40,7 +40,7 @@ class RefPriceRepository {
     await _db.insertRefPrice(
       RefPricesCompanion.insert(
         id: id,
-        itemId: itemId,
+        catalogId: catalogId,
         source: source,
         price: price,
         unitSize: Value(unitSize),
@@ -49,7 +49,7 @@ class RefPriceRepository {
         note: Value(note),
       ),
     );
-    return (await _db.listRefPricesForItem(itemId))
+    return (await _db.listRefPricesForCatalog(catalogId))
         .firstWhere((e) => e.id == id);
   }
 }
