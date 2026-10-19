@@ -36,8 +36,9 @@ ThemeData buildAppTheme({
 
   if (!largeText && !highContrast) return base;
 
+  // Large text is applied via MediaQuery textScaler in SoGiaApp — do not call
+  // TextTheme.apply(fontSizeFactor:) (asserts when fontSize is null on M3).
   return base.copyWith(
-    textTheme: base.textTheme.apply(fontSizeFactor: largeText ? 1.15 : 1.0),
     appBarTheme: AppBarTheme(
       backgroundColor: highContrast ? scheme.primary : null,
       foregroundColor: highContrast ? scheme.onPrimary : null,

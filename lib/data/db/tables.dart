@@ -154,3 +154,15 @@ class StarterPackItems extends Table {
   @override
   Set<Column<Object>> get primaryKey => {packId, catalogId};
 }
+
+/// Barcodes scanned in continuous mode that need catalog enrichment (P8).
+class PendingSupplements extends Table {
+  TextColumn get id => text()();
+  TextColumn get storeId => text().references(Stores, #id)();
+  TextColumn get barcode => text()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get resolvedAt => dateTime().nullable()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}

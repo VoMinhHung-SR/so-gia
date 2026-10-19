@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/money.dart';
 import '../../core/settings.dart';
-import '../../core/vietnamese.dart';
+import '../../data/db/app_database.dart';
 import '../../data/db/database_provider.dart';
 import '../../data/db/tables.dart';
+import '../../data/ref/supermarket_sources.dart';
+import '../../data/repositories/catalog_repository.dart';
 import '../../data/repositories/item_repository.dart';
 import '../../data/repositories/purchase_repository.dart';
 import '../../data/repositories/store_repository.dart';
@@ -24,24 +27,15 @@ class SearchQuery extends Notifier<String> {
 final searchQueryProvider =
     NotifierProvider<SearchQuery, String>(SearchQuery.new);
 
-final filteredItemsProvider = Provider<AsyncValue<List<Item>>>((ref) {
-  final query = ref.watch(searchQueryProvider);
-  final itemsAsync = ref.watch(itemsStreamProvider);
-
-  return itemsAsync.whenData((items) {
-    final q = query.trim();
-    if (q.isEmpty) return items;
-    return items.where((item) {
-      final bag = [
-        item.resolvedName,
-        item.brand ?? '',
-        item.barcode ?? '',
-        item.category ?? '',
-        item.categoryId,
-      ].join(' ');
-      return matchesSearch(bag, q);
-    }).toList();
-  });
+final catalogSearchProvider =
+    FutureProvider.autoDispose<CatalogSearchResult?>((ref) async {
+  final query = ref.watch(searchQueryProvider).trim();
+  if (query.isEmpty) return null;
+  final storeId = ref.watch(currentStoreIdProvider);
+  return ref.read(catalogRepositoryProvider).search(
+        storeId: storeId,
+        query: query,
+      );
 });
 
 class ItemsListScreen extends ConsumerWidget {
@@ -49,7 +43,10 @@ class ItemsListScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final itemsAsync = ref.watch(filteredItemsProvider);
+    ref.watch(seedCatalogLoadedProvider);
+
+    final query = ref.watch(searchQueryProvider).trim();
+    final searching = query.isNotEmpty;
 
     return Scaffold(
       appBar: AppBar(
@@ -116,20 +113,9 @@ class ItemsListScreen extends ConsumerWidget {
             ),
           ),
           Expanded(
-            child: itemsAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text('Lỗi: $e')),
-              data: (list) {
-                if (list.isEmpty) {
-                  return _EmptyCatalog(ref: ref);
-                }
-                return ListView.separated(
-                  itemCount: list.length,
-                  separatorBuilder: (_, _) => const Divider(height: 1),
-                  itemBuilder: (context, i) => _ItemTile(item: list[i]),
-                );
-              },
-            ),
+            child: searching
+                ? _CatalogSearchBody(query: query)
+                : _StoreItemsBody(ref: ref),
           ),
         ],
       ),
@@ -151,10 +137,211 @@ class ItemsListScreen extends ConsumerWidget {
             heroTag: 'add',
             onPressed: () => context.push('/items/new'),
             icon: const Icon(Icons.add),
-            label: const Text('Thêm mặt hàng'),
+            label: const Text('Tạo hàng mới'),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _StoreItemsBody extends ConsumerWidget {
+  const _StoreItemsBody({required this.ref});
+
+  final WidgetRef ref;
+
+  @override
+  Widget build(BuildContext context, WidgetRef _) {
+    final itemsAsync = ref.watch(itemsStreamProvider);
+
+    return itemsAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Center(child: Text('Lỗi: $e')),
+      data: (list) {
+        if (list.isEmpty) {
+          return _EmptyCatalog(ref: ref);
+        }
+        return ListView.separated(
+          itemCount: list.length,
+          separatorBuilder: (_, _) => const Divider(height: 1),
+          itemBuilder: (context, i) => _ItemTile(item: list[i]),
+        );
+      },
+    );
+  }
+}
+
+class _CatalogSearchBody extends ConsumerWidget {
+  const _CatalogSearchBody({required this.query});
+
+  final String query;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final searchAsync = ref.watch(catalogSearchProvider);
+
+    return searchAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Center(child: Text('Lỗi tìm kiếm: $e')),
+      data: (result) {
+        if (result == null) {
+          return const SizedBox.shrink();
+        }
+        if (result.inStore.isEmpty && result.inCatalog.isEmpty) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Text(
+                'Không có kết quả cho “$query”',
+                textAlign: TextAlign.center,
+              ),
+            ),
+          );
+        }
+
+        return ListView(
+          children: [
+            if (result.inStore.isNotEmpty) ...[
+              _SectionHeader(title: 'Trong cửa hàng'),
+              ...result.inStore.map((item) => _ItemTile(item: item)),
+              const Divider(height: 1),
+            ],
+            if (result.inCatalog.isNotEmpty) ...[
+              _SectionHeader(title: 'Trong danh mục'),
+              ...result.inCatalog.map(
+                (p) => _CatalogProductTile(product: p),
+              ),
+            ],
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({required this.title});
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      child: Text(
+        title,
+        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+              color: Theme.of(context).colorScheme.primary,
+              fontWeight: FontWeight.w600,
+            ),
+      ),
+    );
+  }
+}
+
+class _CatalogProductTile extends ConsumerStatefulWidget {
+  const _CatalogProductTile({required this.product});
+
+  final CatalogProduct product;
+
+  @override
+  ConsumerState<_CatalogProductTile> createState() =>
+      _CatalogProductTileState();
+}
+
+class _CatalogProductTileState extends ConsumerState<_CatalogProductTile> {
+  bool _adding = false;
+
+  Future<void> _addToStore() async {
+    if (_adding) return;
+    setState(() => _adding = true);
+    try {
+      final storeId = ref.read(currentStoreIdProvider);
+      final item = await ref.read(catalogRepositoryProvider).addToStore(
+            storeId: storeId,
+            catalogId: widget.product.id,
+          );
+      if (!mounted) return;
+      final messenger = ScaffoldMessenger.of(context);
+      messenger.showSnackBar(
+        SnackBar(
+          content: const Text('Đã thêm'),
+          action: SnackBarAction(
+            label: 'Hoàn tác',
+            onPressed: () {
+              ref.read(catalogRepositoryProvider).undoAddToStore(item.id);
+            },
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Không thêm được: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _adding = false);
+    }
+  }
+
+  Future<void> _openSupermarket(SupermarketSource source) async {
+    final uri = source.searchUri(widget.product.name);
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Không mở được ${source.label}')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final p = widget.product;
+    final subtitle = [
+      if (p.brand != null && p.brand!.isNotEmpty) p.brand!,
+      if (p.unitSize != null)
+        '${_fmtSize(p.unitSize!)} ${_unitLabel(p.unitType)}',
+      if (p.barcode != null && p.barcode!.isNotEmpty) p.barcode!,
+    ].join(' · ');
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ListTile(
+          title: Text(p.name),
+          subtitle: Text(subtitle.isEmpty ? '—' : subtitle),
+          trailing: _adding
+              ? const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : IconButton(
+                  tooltip: 'Thêm vào cửa hàng',
+                  icon: const Icon(Icons.add),
+                  onPressed: _addToStore,
+                ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+          child: Wrap(
+            spacing: 4,
+            runSpacing: 0,
+            children: [
+              for (final s in kSupermarketSources)
+                TextButton(
+                  style: TextButton.styleFrom(
+                    visualDensity: VisualDensity.compact,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                  ),
+                  onPressed: () => _openSupermarket(s),
+                  child: Text(s.label),
+                ),
+            ],
+          ),
+        ),
+        const Divider(height: 1),
+      ],
     );
   }
 }

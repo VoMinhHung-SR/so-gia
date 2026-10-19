@@ -126,7 +126,7 @@ CREATE TABLE sell_prices (
     addTearDown(db.close);
 
     expect(await db.ping(), isTrue);
-    expect(db.schemaVersion, 2);
+    expect(db.schemaVersion, 3);
 
     final items = await db.listActiveItems(kDefaultStoreId);
     expect(items, hasLength(1));
