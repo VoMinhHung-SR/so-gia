@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../data/repositories/item_repository.dart';
+import '../../data/repositories/store_repository.dart';
 import '../items/item_form_screen.dart';
 
 bool get canUseCameraScanner {
@@ -56,8 +57,10 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
     });
 
     try {
-      final result =
-          await ref.read(itemRepositoryProvider).resolveBarcode(barcode);
+      final storeId = ref.read(currentStoreIdProvider);
+      final result = await ref
+          .read(itemRepositoryProvider)
+          .resolveBarcode(storeId, barcode);
       if (!mounted) return;
 
       switch (result) {

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../data/db/app_database.dart';
+import '../../data/repositories/store_repository.dart';
 import '../../data/repositories/supplier_repository.dart';
 
 class SuppliersScreen extends ConsumerWidget {
@@ -151,7 +152,9 @@ Future<void> _openForm(
             FilledButton(
               onPressed: () async {
                 if (nameCtrl.text.trim().isEmpty) return;
+                final storeId = ref.read(currentStoreIdProvider);
                 await ref.read(supplierRepositoryProvider).save(
+                      storeId: storeId,
                       id: existing?.id,
                       name: nameCtrl.text,
                       phone: phoneCtrl.text,

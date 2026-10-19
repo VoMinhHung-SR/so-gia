@@ -4,7 +4,9 @@ import 'package:archive/archive.dart';
 import 'package:drift/drift.dart';
 
 import '../../core/csv.dart';
+import '../../core/vietnamese.dart';
 import '../db/app_database.dart';
+import '../db/category_seed.dart';
 import '../db/tables.dart';
 
 class CsvMergePreview {
@@ -26,6 +28,8 @@ class CsvBackupService {
 
   final AppDatabase _db;
 
+  static const formatVersion = 2;
+
   Future<Uint8List> exportZip() async {
     final archive = Archive();
 
@@ -34,7 +38,19 @@ class CsvBackupService {
       archive.addFile(ArchiveFile(name, bytes.length, bytes));
     }
 
-    add('items.csv', await _exportItems());
+    add(
+      'manifest.json',
+      const JsonEncoder.withIndent('  ').convert({
+        'format_version': formatVersion,
+        'app': 'so_gia',
+        'exported_at': DateTime.now().toUtc().toIso8601String(),
+      }),
+    );
+    add('stores.csv', await _exportStores());
+    add('categories.csv', await _exportCategories());
+    add('catalog_products.csv', await _exportCatalog());
+    add('store_items.csv', await _exportStoreItems());
+    add('margin_by_category.csv', await _exportMargins());
     add('suppliers.csv', await _exportSuppliers());
     add('purchases.csv', await _exportPurchases());
     add('ref_prices.csv', await _exportRefPrices());
@@ -47,8 +63,15 @@ class CsvBackupService {
   Future<List<CsvMergePreview>> previewImport(Uint8List zipBytes) async {
     final files = _unzipCsv(zipBytes);
     final previews = <CsvMergePreview>[];
-    if (files.containsKey('items.csv')) {
-      previews.add(await _previewItems(files['items.csv']!));
+    if (files.containsKey('items.csv') &&
+        !files.containsKey('catalog_products.csv')) {
+      previews.add(await _previewLegacyItems(files['items.csv']!));
+    }
+    if (files.containsKey('catalog_products.csv')) {
+      previews.add(await _previewCatalog(files['catalog_products.csv']!));
+    }
+    if (files.containsKey('store_items.csv')) {
+      previews.add(await _previewStoreItems(files['store_items.csv']!));
     }
     if (files.containsKey('suppliers.csv')) {
       previews.add(await _previewSuppliers(files['suppliers.csv']!));
@@ -67,12 +90,34 @@ class CsvBackupService {
 
   Future<void> importZip(Uint8List zipBytes) async {
     final files = _unzipCsv(zipBytes);
-    // Parents first.
-    if (files.containsKey('suppliers.csv')) {
-      await _importSuppliers(files['suppliers.csv']!);
+    final storeId = await ensureDefaultStore(_db);
+
+    if (files.containsKey('stores.csv')) {
+      await _importStores(files['stores.csv']!);
     }
-    if (files.containsKey('items.csv')) {
-      await _importItems(files['items.csv']!);
+    if (files.containsKey('categories.csv')) {
+      await _importCategories(files['categories.csv']!);
+    } else {
+      await seedCategories(_db);
+    }
+
+    // v1 zip: items.csv only → map into default store.
+    if (files.containsKey('items.csv') &&
+        !files.containsKey('catalog_products.csv')) {
+      await _importLegacyItems(files['items.csv']!, storeId);
+    }
+
+    if (files.containsKey('catalog_products.csv')) {
+      await _importCatalog(files['catalog_products.csv']!);
+    }
+    if (files.containsKey('store_items.csv')) {
+      await _importStoreItems(files['store_items.csv']!);
+    }
+    if (files.containsKey('margin_by_category.csv')) {
+      await _importMargins(files['margin_by_category.csv']!);
+    }
+    if (files.containsKey('suppliers.csv')) {
+      await _importSuppliers(files['suppliers.csv']!, fallbackStoreId: storeId);
     }
     if (files.containsKey('purchases.csv')) {
       await _importPurchases(files['purchases.csv']!);
@@ -91,26 +136,68 @@ class CsvBackupService {
     for (final f in archive.files) {
       if (!f.isFile) continue;
       final name = f.name.split('/').last;
-      if (!name.endsWith('.csv')) continue;
-      out[name] = utf8.decode(f.content as List<int>);
+      if (name.endsWith('.csv') || name.endsWith('.json')) {
+        out[name] = utf8.decode(f.content as List<int>);
+      }
     }
     return out;
   }
 
-  Future<String> _exportItems() async {
-    final all = await (_db.select(_db.items)).get();
+  Future<String> _exportStores() async {
+    final all = await (_db.select(_db.stores)).get();
+    return encodeCsv(
+      headers: [
+        'id',
+        'name',
+        'type',
+        'default_margin_pct',
+        'rounding_step',
+        'created_at',
+        'updated_at',
+        'deleted_at',
+      ],
+      rows: [
+        for (final s in all)
+          [
+            s.id,
+            s.name,
+            s.type,
+            s.defaultMarginPct,
+            s.roundingStep,
+            s.createdAt,
+            s.updatedAt,
+            s.deletedAt,
+          ],
+      ],
+    );
+  }
+
+  Future<String> _exportCategories() async {
+    final all = await _db.listCategories();
+    return encodeCsv(
+      headers: ['id', 'name', 'parent_id', 'sort', 'is_weighed'],
+      rows: [
+        for (final c in all)
+          [c.id, c.name, c.parentId, c.sort, c.isWeighed],
+      ],
+    );
+  }
+
+  Future<String> _exportCatalog() async {
+    final all = await _db.listAllCatalogProducts();
     return encodeCsv(
       headers: [
         'id',
         'barcode',
         'name',
+        'name_search',
         'brand',
         'unit_size',
         'unit_type',
-        'category',
+        'category_id',
         'is_weighed',
         'source',
-        'image_url',
+        'catalog_version',
         'created_at',
         'updated_at',
         'deleted_at',
@@ -121,17 +208,57 @@ class CsvBackupService {
             i.id,
             i.barcode,
             i.name,
+            i.nameSearch,
             i.brand,
             i.unitSize,
             i.unitType.name,
-            i.category,
+            i.categoryId,
             i.isWeighed,
             i.source.name,
-            i.imageUrl,
+            i.catalogVersion,
             i.createdAt,
             i.updatedAt,
             i.deletedAt,
           ],
+      ],
+    );
+  }
+
+  Future<String> _exportStoreItems() async {
+    final all = await _db.listAllStoreItems();
+    return encodeCsv(
+      headers: [
+        'id',
+        'store_id',
+        'catalog_id',
+        'display_name',
+        'is_active',
+        'created_at',
+        'updated_at',
+        'deleted_at',
+      ],
+      rows: [
+        for (final i in all)
+          [
+            i.id,
+            i.storeId,
+            i.catalogId,
+            i.displayName,
+            i.isActive,
+            i.createdAt,
+            i.updatedAt,
+            i.deletedAt,
+          ],
+      ],
+    );
+  }
+
+  Future<String> _exportMargins() async {
+    final all = await (_db.select(_db.marginByCategory)).get();
+    return encodeCsv(
+      headers: ['store_id', 'category_id', 'margin_pct'],
+      rows: [
+        for (final m in all) [m.storeId, m.categoryId, m.marginPct],
       ],
     );
   }
@@ -141,6 +268,7 @@ class CsvBackupService {
     return encodeCsv(
       headers: [
         'id',
+        'store_id',
         'name',
         'phone',
         'note',
@@ -150,7 +278,16 @@ class CsvBackupService {
       ],
       rows: [
         for (final s in all)
-          [s.id, s.name, s.phone, s.note, s.createdAt, s.updatedAt, s.deletedAt],
+          [
+            s.id,
+            s.storeId,
+            s.name,
+            s.phone,
+            s.note,
+            s.createdAt,
+            s.updatedAt,
+            s.deletedAt,
+          ],
       ],
     );
   }
@@ -193,7 +330,7 @@ class CsvBackupService {
     return encodeCsv(
       headers: [
         'id',
-        'item_id',
+        'catalog_id',
         'source',
         'price',
         'unit_size',
@@ -205,7 +342,7 @@ class CsvBackupService {
         for (final r in all)
           [
             r.id,
-            r.itemId,
+            r.catalogId,
             r.source.name,
             r.price,
             r.unitSize,
@@ -228,11 +365,48 @@ class CsvBackupService {
     );
   }
 
-  Future<CsvMergePreview> _previewItems(String csv) async {
+  Future<CsvMergePreview> _previewLegacyItems(String csv) async {
+    return _previewByUpdatedAtCatalogish(
+      table: 'items',
+      csv: csv,
+      getLocal: (id) async {
+        final row = await _db.getCatalogRowById(id);
+        return row?.updatedAt;
+      },
+    );
+  }
+
+  Future<CsvMergePreview> _previewCatalog(String csv) async {
+    return _previewByUpdatedAtCatalogish(
+      table: 'catalog_products',
+      csv: csv,
+      getLocal: (id) async {
+        final row = await _db.getCatalogRowById(id);
+        return row?.updatedAt;
+      },
+    );
+  }
+
+  Future<CsvMergePreview> _previewStoreItems(String csv) async {
+    return _previewByUpdatedAtCatalogish(
+      table: 'store_items',
+      csv: csv,
+      getLocal: (id) async {
+        final row = await _db.getStoreItemRowById(id);
+        return row?.updatedAt;
+      },
+    );
+  }
+
+  Future<CsvMergePreview> _previewByUpdatedAtCatalogish({
+    required String table,
+    required String csv,
+    required Future<DateTime?> Function(String id) getLocal,
+  }) async {
     final rows = parseCsv(csv);
     if (rows.length < 2) {
-      return const CsvMergePreview(
-        table: 'items',
+      return CsvMergePreview(
+        table: table,
         toInsert: 0,
         toUpdate: 0,
         unchanged: 0,
@@ -244,12 +418,12 @@ class CsvBackupService {
       final map = _rowMap(header, row);
       final id = map['id'] ?? '';
       if (id.isEmpty) continue;
-      final local = await _db.getItemRowById(id);
-      if (local == null) {
+      final localAt = await getLocal(id);
+      if (localAt == null) {
         insert++;
       } else {
         final incomingAt = DateTime.tryParse(map['updated_at'] ?? '');
-        if (incomingAt != null && !incomingAt.isBefore(local.updatedAt)) {
+        if (incomingAt != null && !incomingAt.isBefore(localAt)) {
           update++;
         } else {
           same++;
@@ -257,7 +431,7 @@ class CsvBackupService {
       }
     }
     return CsvMergePreview(
-      table: 'items',
+      table: table,
       toInsert: insert,
       toUpdate: update,
       unchanged: same,
@@ -310,7 +484,6 @@ class CsvBackupService {
   }
 
   Future<CsvMergePreview> _previewRefPrices(String csv) async {
-    // Ref prices have no updated_at — always insert-or-replace by id.
     final rows = parseCsv(csv);
     if (rows.length < 2) {
       return const CsvMergePreview(
@@ -413,7 +586,7 @@ class CsvBackupService {
     );
   }
 
-  Future<void> _importItems(String csv) async {
+  Future<void> _importStores(String csv) async {
     final rows = parseCsv(csv);
     if (rows.length < 2) return;
     final header = rows.first;
@@ -423,21 +596,17 @@ class CsvBackupService {
       if (id.isEmpty || (m['name'] ?? '').isEmpty) continue;
       final incomingAt =
           DateTime.tryParse(m['updated_at'] ?? '') ?? DateTime.now().toUtc();
-      final local = await _db.getItemRowById(id);
+      final local = await _db.getStoreById(id);
       if (local != null && local.updatedAt.isAfter(incomingAt)) continue;
-
-      await _db.upsertItem(
-        ItemsCompanion(
+      await _db.upsertStore(
+        StoresCompanion(
           id: Value(id),
-          barcode: Value(_emptyToNull(m['barcode'])),
           name: Value(m['name']!),
-          brand: Value(_emptyToNull(m['brand'])),
-          unitSize: Value(double.tryParse(m['unit_size'] ?? '')),
-          unitType: Value(_parseEnum(UnitType.values, m['unit_type'], UnitType.piece)),
-          category: Value(_emptyToNull(m['category'])),
-          isWeighed: Value(m['is_weighed'] == 'true'),
-          source: Value(_parseEnum(ItemSource.values, m['source'], ItemSource.manual)),
-          imageUrl: Value(_emptyToNull(m['image_url'])),
+          type: Value(_emptyToNull(m['type'])),
+          defaultMarginPct: Value(
+            double.tryParse(m['default_margin_pct'] ?? '') ?? 20,
+          ),
+          roundingStep: Value(int.tryParse(m['rounding_step'] ?? '') ?? 500),
           createdAt: Value(
             DateTime.tryParse(m['created_at'] ?? '') ?? incomingAt,
           ),
@@ -448,7 +617,175 @@ class CsvBackupService {
     }
   }
 
-  Future<void> _importSuppliers(String csv) async {
+  Future<void> _importCategories(String csv) async {
+    final rows = parseCsv(csv);
+    if (rows.length < 2) return;
+    final header = rows.first;
+    for (final row in rows.skip(1)) {
+      final m = _rowMap(header, row);
+      final id = m['id'] ?? '';
+      if (id.isEmpty || (m['name'] ?? '').isEmpty) continue;
+      await _db.into(_db.categories).insertOnConflictUpdate(
+            CategoriesCompanion(
+              id: Value(id),
+              name: Value(m['name']!),
+              parentId: Value(_emptyToNull(m['parent_id'])),
+              sort: Value(int.tryParse(m['sort'] ?? '') ?? 0),
+              isWeighed: Value(m['is_weighed'] == 'true'),
+            ),
+          );
+    }
+  }
+
+  Future<void> _importLegacyItems(String csv, String storeId) async {
+    final rows = parseCsv(csv);
+    if (rows.length < 2) return;
+    final header = rows.first;
+    for (final row in rows.skip(1)) {
+      final m = _rowMap(header, row);
+      final id = m['id'] ?? '';
+      if (id.isEmpty || (m['name'] ?? '').isEmpty) continue;
+      final incomingAt =
+          DateTime.tryParse(m['updated_at'] ?? '') ?? DateTime.now().toUtc();
+      final local = await _db.getCatalogRowById(id);
+      if (local != null && local.updatedAt.isAfter(incomingAt)) continue;
+
+      final name = m['name']!;
+      final sourceRaw = m['source'];
+      await _db.upsertCatalogProduct(
+        CatalogProductsCompanion(
+          id: Value(id),
+          barcode: Value(_emptyToNull(m['barcode'])),
+          name: Value(name),
+          nameSearch: Value(removeDiacritics(name)),
+          brand: Value(_emptyToNull(m['brand'])),
+          unitSize: Value(double.tryParse(m['unit_size'] ?? '')),
+          unitType: Value(
+            _parseEnum(UnitType.values, m['unit_type'], UnitType.piece),
+          ),
+          categoryId: Value(mapLegacyCategoryId(_emptyToNull(m['category']))),
+          isWeighed: Value(m['is_weighed'] == 'true'),
+          source: Value(parseCatalogSource(sourceRaw)),
+          createdAt: Value(
+            DateTime.tryParse(m['created_at'] ?? '') ?? incomingAt,
+          ),
+          updatedAt: Value(incomingAt),
+          deletedAt: Value(DateTime.tryParse(m['deleted_at'] ?? '')),
+        ),
+      );
+      await _db.upsertStoreItem(
+        StoreItemsCompanion(
+          id: Value(id),
+          storeId: Value(storeId),
+          catalogId: Value(id),
+          isActive: Value(m['deleted_at'] == null || m['deleted_at']!.isEmpty),
+          createdAt: Value(
+            DateTime.tryParse(m['created_at'] ?? '') ?? incomingAt,
+          ),
+          updatedAt: Value(incomingAt),
+          deletedAt: Value(DateTime.tryParse(m['deleted_at'] ?? '')),
+        ),
+      );
+    }
+  }
+
+  Future<void> _importCatalog(String csv) async {
+    final rows = parseCsv(csv);
+    if (rows.length < 2) return;
+    final header = rows.first;
+    for (final row in rows.skip(1)) {
+      final m = _rowMap(header, row);
+      final id = m['id'] ?? '';
+      if (id.isEmpty || (m['name'] ?? '').isEmpty) continue;
+      final incomingAt =
+          DateTime.tryParse(m['updated_at'] ?? '') ?? DateTime.now().toUtc();
+      final local = await _db.getCatalogRowById(id);
+      if (local != null && local.updatedAt.isAfter(incomingAt)) continue;
+      final name = m['name']!;
+      await _db.upsertCatalogProduct(
+        CatalogProductsCompanion(
+          id: Value(id),
+          barcode: Value(_emptyToNull(m['barcode'])),
+          name: Value(name),
+          nameSearch: Value(
+            _emptyToNull(m['name_search']) ?? removeDiacritics(name),
+          ),
+          brand: Value(_emptyToNull(m['brand'])),
+          unitSize: Value(double.tryParse(m['unit_size'] ?? '')),
+          unitType: Value(
+            _parseEnum(UnitType.values, m['unit_type'], UnitType.piece),
+          ),
+          categoryId: Value(m['category_id']?.isNotEmpty == true
+              ? m['category_id']!
+              : 'khac'),
+          isWeighed: Value(m['is_weighed'] == 'true'),
+          source: Value(parseCatalogSource(m['source'])),
+          catalogVersion: Value(int.tryParse(m['catalog_version'] ?? '')),
+          createdAt: Value(
+            DateTime.tryParse(m['created_at'] ?? '') ?? incomingAt,
+          ),
+          updatedAt: Value(incomingAt),
+          deletedAt: Value(DateTime.tryParse(m['deleted_at'] ?? '')),
+        ),
+      );
+    }
+  }
+
+  Future<void> _importStoreItems(String csv) async {
+    final rows = parseCsv(csv);
+    if (rows.length < 2) return;
+    final header = rows.first;
+    for (final row in rows.skip(1)) {
+      final m = _rowMap(header, row);
+      final id = m['id'] ?? '';
+      final storeId = m['store_id'] ?? '';
+      final catalogId = m['catalog_id'] ?? '';
+      if (id.isEmpty || storeId.isEmpty || catalogId.isEmpty) continue;
+      final incomingAt =
+          DateTime.tryParse(m['updated_at'] ?? '') ?? DateTime.now().toUtc();
+      final local = await _db.getStoreItemRowById(id);
+      if (local != null && local.updatedAt.isAfter(incomingAt)) continue;
+      await _db.upsertStoreItem(
+        StoreItemsCompanion(
+          id: Value(id),
+          storeId: Value(storeId),
+          catalogId: Value(catalogId),
+          displayName: Value(_emptyToNull(m['display_name'])),
+          isActive: Value(m['is_active'] != 'false'),
+          createdAt: Value(
+            DateTime.tryParse(m['created_at'] ?? '') ?? incomingAt,
+          ),
+          updatedAt: Value(incomingAt),
+          deletedAt: Value(DateTime.tryParse(m['deleted_at'] ?? '')),
+        ),
+      );
+    }
+  }
+
+  Future<void> _importMargins(String csv) async {
+    final rows = parseCsv(csv);
+    if (rows.length < 2) return;
+    final header = rows.first;
+    for (final row in rows.skip(1)) {
+      final m = _rowMap(header, row);
+      final storeId = m['store_id'] ?? '';
+      final categoryId = m['category_id'] ?? '';
+      final pct = double.tryParse(m['margin_pct'] ?? '');
+      if (storeId.isEmpty || categoryId.isEmpty || pct == null) continue;
+      await _db.upsertMargin(
+        MarginByCategoryCompanion(
+          storeId: Value(storeId),
+          categoryId: Value(categoryId),
+          marginPct: Value(pct),
+        ),
+      );
+    }
+  }
+
+  Future<void> _importSuppliers(
+    String csv, {
+    required String fallbackStoreId,
+  }) async {
     final rows = parseCsv(csv);
     if (rows.length < 2) return;
     final header = rows.first;
@@ -464,6 +801,9 @@ class CsvBackupService {
       await _db.upsertSupplier(
         SuppliersCompanion(
           id: Value(id),
+          storeId: Value(
+            _emptyToNull(m['store_id']) ?? fallbackStoreId,
+          ),
           name: Value(m['name']!),
           phone: Value(_emptyToNull(m['phone'])),
           note: Value(_emptyToNull(m['note'])),
@@ -520,15 +860,20 @@ class CsvBackupService {
     for (final row in rows.skip(1)) {
       final m = _rowMap(header, row);
       final id = m['id'] ?? '';
-      final itemId = m['item_id'] ?? '';
+      // Accept v1 column `item_id` as catalog_id.
+      final catalogId = m['catalog_id'] ?? m['item_id'] ?? '';
       final price = int.tryParse(m['price'] ?? '');
-      if (id.isEmpty || itemId.isEmpty || price == null) continue;
+      if (id.isEmpty || catalogId.isEmpty || price == null) continue;
       await _db.upsertRefPrice(
         RefPricesCompanion(
           id: Value(id),
-          itemId: Value(itemId),
+          catalogId: Value(catalogId),
           source: Value(
-            _parseEnum(RefPriceSource.values, m['source'], RefPriceSource.other),
+            _parseEnum(
+              RefPriceSource.values,
+              m['source'],
+              RefPriceSource.other,
+            ),
           ),
           price: Value(price),
           unitSize: Value(double.tryParse(m['unit_size'] ?? '')),

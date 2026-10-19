@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/pricing.dart';
 import '../../core/settings.dart';
+import '../../data/db/app_database.dart';
 import '../../data/db/database_provider.dart';
+import '../../data/repositories/store_repository.dart';
 import '../../data/seed/demo_seed.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -34,10 +36,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Future<void> _seedDemo({required bool force}) async {
     setState(() => _seeding = true);
     try {
+      final storeId = ref.read(currentStoreIdProvider);
       final service = DemoSeedService(ref.read(databaseProvider));
       final result = force
-          ? await service.seed(force: true)
-          : await service.seedIfEmpty();
+          ? await service.seed(force: true, storeId: storeId)
+          : await service.seedIfEmpty(storeId: storeId);
       if (!mounted) return;
       if (result == null || (result.items == 0 && !force)) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -224,19 +227,153 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             onTap: () => context.push('/backup'),
           ),
           const Divider(height: 32),
-          Text(
-            'Gợi ý theo nhóm hàng (cố định trong app)',
-            style: Theme.of(context).textTheme.titleSmall,
-          ),
-          const SizedBox(height: 8),
-          for (final e in kDefaultCategoryMarkups.entries)
-            ListTile(
-              dense: true,
-              contentPadding: EdgeInsets.zero,
-              title: Text(e.key),
-              trailing: Text('${e.value.toStringAsFixed(0)}%'),
-            ),
+          const _StoreCategoryMarginsSection(),
         ],
+      ),
+    );
+  }
+}
+
+class _StoreCategoryMarginsSection extends ConsumerStatefulWidget {
+  const _StoreCategoryMarginsSection();
+
+  @override
+  ConsumerState<_StoreCategoryMarginsSection> createState() =>
+      _StoreCategoryMarginsSectionState();
+}
+
+class _StoreCategoryMarginsSectionState
+    extends ConsumerState<_StoreCategoryMarginsSection> {
+  List<Category>? _categories;
+  Map<String, double> _margins = {};
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() => _loading = true);
+    final db = ref.read(databaseProvider);
+    final storeId = ref.read(currentStoreIdProvider);
+    final categories = await db.listCategories();
+    final rows = await db.listMarginsForStore(storeId);
+    if (!mounted) return;
+    setState(() {
+      _categories = categories;
+      _margins = {for (final r in rows) r.categoryId: r.marginPct};
+      _loading = false;
+    });
+  }
+
+  Future<void> _saveMargin(String categoryId, String text) async {
+    final pct = double.tryParse(text.replaceAll(',', '.'));
+    if (pct == null) return;
+    final storeId = ref.read(currentStoreIdProvider);
+    await ref.read(databaseProvider).upsertMargin(
+          MarginByCategoryCompanion.insert(
+            storeId: storeId,
+            categoryId: categoryId,
+            marginPct: pct,
+          ),
+        );
+    setState(() => _margins[categoryId] = pct);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ref.listen(currentStoreIdProvider, (prev, next) {
+      if (prev != next) _load();
+    });
+
+    if (_loading) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 8),
+        child: LinearProgressIndicator(),
+      );
+    }
+
+    final categories = _categories ?? [];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '% lời theo nhóm (cửa hàng hiện tại)',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: 8),
+        for (final c in categories)
+          _MarginRow(
+            key: ValueKey(c.id),
+            label: c.name,
+            initialPct: _margins[c.id]?.toStringAsFixed(0) ?? '',
+            onSubmitted: (v) => _saveMargin(c.id, v),
+          ),
+      ],
+    );
+  }
+}
+
+class _MarginRow extends StatefulWidget {
+  const _MarginRow({
+    super.key,
+    required this.label,
+    required this.initialPct,
+    required this.onSubmitted,
+  });
+
+  final String label;
+  final String initialPct;
+  final ValueChanged<String> onSubmitted;
+
+  @override
+  State<_MarginRow> createState() => _MarginRowState();
+}
+
+class _MarginRowState extends State<_MarginRow> {
+  late final TextEditingController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = TextEditingController(text: widget.initialPct);
+  }
+
+  @override
+  void didUpdateWidget(covariant _MarginRow oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialPct != widget.initialPct) {
+      _ctrl.text = widget.initialPct;
+    }
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      title: Text(widget.label),
+      trailing: SizedBox(
+        width: 72,
+        child: TextField(
+          controller: _ctrl,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          textAlign: TextAlign.end,
+          decoration: const InputDecoration(
+            suffixText: '%',
+            isDense: true,
+            border: OutlineInputBorder(),
+          ),
+          onSubmitted: widget.onSubmitted,
+          onEditingComplete: () => widget.onSubmitted(_ctrl.text),
+        ),
       ),
     );
   }

@@ -18,25 +18,21 @@ void main() {
 
   tearDown(() => db.close());
 
-  test('export zip then import roundtrip', () async {
-    final now = DateTime.now().toUtc();
-    final itemId = newId();
-    await db.upsertItem(
-      ItemsCompanion.insert(
-        id: itemId,
-        name: 'Coca 330ml',
-        unitType: UnitType.ml,
-        source: ItemSource.manual,
-        createdAt: now,
-        updatedAt: now,
-        barcode: const Value('893'),
-        unitSize: const Value(330),
-      ),
+  test('export zip then import roundtrip v2', () async {
+    final item = await db.saveStoreItem(
+      storeId: kDefaultStoreId,
+      barcode: '893',
+      name: 'Coca 330ml',
+      unitSize: 330,
+      unitType: UnitType.ml,
+      categoryId: 'nuoc-giai-khat',
+      source: CatalogSource.user,
     );
+    final now = DateTime.now().toUtc();
     await db.insertPurchase(
       PurchasesCompanion.insert(
         id: newId(),
-        itemId: itemId,
+        itemId: item.id,
         costPrice: 7000,
         date: now,
         createdAt: now,
@@ -51,25 +47,40 @@ void main() {
     addTearDown(db2.close);
     final backup2 = CsvBackupService(db2);
     final preview = await backup2.previewImport(zip);
-    expect(preview.any((p) => p.table == 'items' && p.toInsert == 1), isTrue);
+    expect(
+      preview.any((p) => p.table == 'catalog_products' && p.toInsert == 1),
+      isTrue,
+    );
 
     await backup2.importZip(zip);
-    final items = await db2.listActiveItems();
+    final items = await db2.listActiveItems(kDefaultStoreId);
     expect(items.single.name, 'Coca 330ml');
-    final purchases = await db2.listPurchasesForItem(itemId);
+    final purchases = await db2.listPurchasesForItem(item.id);
     expect(purchases.single.costPrice, 7000);
   });
 
-  test('newer updated_at wins on merge', () async {
+  test('newer updated_at wins on catalog merge', () async {
     final id = newId();
     final old = DateTime.utc(2024, 1, 1);
     final neu = DateTime.utc(2026, 1, 1);
-    await db.upsertItem(
-      ItemsCompanion.insert(
+
+    await db.upsertCatalogProduct(
+      CatalogProductsCompanion.insert(
         id: id,
         name: 'Old name',
+        nameSearch: 'old name',
         unitType: UnitType.piece,
-        source: ItemSource.manual,
+        categoryId: 'khac',
+        source: CatalogSource.user,
+        createdAt: old,
+        updatedAt: old,
+      ),
+    );
+    await db.upsertStoreItem(
+      StoreItemsCompanion.insert(
+        id: id,
+        storeId: kDefaultStoreId,
+        catalogId: id,
         createdAt: old,
         updatedAt: old,
       ),
@@ -77,12 +88,23 @@ void main() {
 
     final other = AppDatabase(NativeDatabase.memory());
     addTearDown(other.close);
-    await other.upsertItem(
-      ItemsCompanion.insert(
+    await other.upsertCatalogProduct(
+      CatalogProductsCompanion.insert(
         id: id,
         name: 'New name',
+        nameSearch: 'new name',
         unitType: UnitType.piece,
-        source: ItemSource.manual,
+        categoryId: 'khac',
+        source: CatalogSource.user,
+        createdAt: old,
+        updatedAt: neu,
+      ),
+    );
+    await other.upsertStoreItem(
+      StoreItemsCompanion.insert(
+        id: id,
+        storeId: kDefaultStoreId,
+        catalogId: id,
         createdAt: old,
         updatedAt: neu,
       ),
@@ -90,7 +112,7 @@ void main() {
     final zip = await CsvBackupService(other).exportZip();
     await backup.importZip(zip);
 
-    final item = await db.getItemRowById(id);
+    final item = await db.getCatalogRowById(id);
     expect(item?.name, 'New name');
   });
 }

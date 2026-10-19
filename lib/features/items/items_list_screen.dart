@@ -9,7 +9,9 @@ import '../../data/db/database_provider.dart';
 import '../../data/db/tables.dart';
 import '../../data/repositories/item_repository.dart';
 import '../../data/repositories/purchase_repository.dart';
+import '../../data/repositories/store_repository.dart';
 import '../../data/seed/demo_seed.dart';
+import '../stores/store_switcher.dart';
 import 'item_form_screen.dart';
 
 class SearchQuery extends Notifier<String> {
@@ -31,10 +33,11 @@ final filteredItemsProvider = Provider<AsyncValue<List<Item>>>((ref) {
     if (q.isEmpty) return items;
     return items.where((item) {
       final bag = [
-        item.name,
+        item.resolvedName,
         item.brand ?? '',
         item.barcode ?? '',
         item.category ?? '',
+        item.categoryId,
       ].join(' ');
       return matchesSearch(bag, q);
     }).toList();
@@ -50,7 +53,13 @@ class ItemsListScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Sổ giá'),
+        title: const Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Sổ giá'),
+            StoreSwitcher(),
+          ],
+        ),
         actions: [
           IconButton(
             tooltip: 'Nhà cung cấp',
@@ -195,7 +204,7 @@ class _ItemTileState extends ConsumerState<_ItemTile> {
     ].join(' · ');
 
     return ListTile(
-      title: Text(item.name),
+      title: Text(item.resolvedName),
       subtitle: Text(subtitle.isEmpty ? '—' : subtitle),
       trailing: _latestPrice == null
           ? null
@@ -255,9 +264,11 @@ class _EmptyCatalogState extends State<_EmptyCatalog> {
                   : () async {
                       setState(() => _busy = true);
                       try {
+                        final storeId =
+                            widget.ref.read(currentStoreIdProvider);
                         final r = await DemoSeedService(
                           widget.ref.read(databaseProvider),
-                        ).seedIfEmpty();
+                        ).seedIfEmpty(storeId: storeId);
                         if (!context.mounted) return;
                         if (r == null) {
                           ScaffoldMessenger.of(context).showSnackBar(

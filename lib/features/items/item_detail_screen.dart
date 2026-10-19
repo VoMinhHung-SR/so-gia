@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../core/money.dart';
 import '../../core/pricing.dart';
+import '../../data/db/app_database.dart';
 import '../../data/db/tables.dart';
 import '../../data/ref/supermarket_sources.dart';
 import '../../data/repositories/item_repository.dart';
@@ -145,7 +146,8 @@ class _ItemDetailBodyState extends ConsumerState<_ItemDetailBody> {
     final suppliers = ref.watch(suppliersStreamProvider);
     final sellAsync = ref.watch(currentSellProvider(item.id));
     final compare = ref.watch(supplierCompareProvider(item.id));
-    final refPrices = ref.watch(latestRefPricesProvider(item.id));
+    final catalogId = item.catalogId;
+    final refPrices = ref.watch(latestRefPricesProvider(catalogId));
 
     final meta = [
       if (item.brand != null) item.brand!,
@@ -162,14 +164,14 @@ class _ItemDetailBodyState extends ConsumerState<_ItemDetailBody> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(item.name),
+        title: Text(item.resolvedName),
         actions: [
           IconButton(
             tooltip: 'Giá bán lẻ siêu thị',
             icon: const Icon(Icons.storefront_outlined),
             onPressed: () async {
               await context.push('/items/${item.id}/ref-price');
-              ref.invalidate(latestRefPricesProvider(item.id));
+              ref.invalidate(latestRefPricesProvider(catalogId));
             },
           ),
           IconButton(

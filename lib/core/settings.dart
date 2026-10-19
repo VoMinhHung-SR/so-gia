@@ -21,6 +21,7 @@ const _kLastBackupAt = 'last_backup_at';
 const _kLargeText = 'large_text';
 const _kHighContrast = 'high_contrast';
 const _kStartOnScan = 'start_on_scan';
+const _kCurrentStoreId = 'current_store_id';
 
 class AppSettings {
   AppSettings(this._prefs);
@@ -74,7 +75,13 @@ class AppSettings {
 
   Future<void> setStartOnScan(bool v) => _prefs.setBool(_kStartOnScan, v);
 
-  /// Resolve markup for an item category; falls back to global default.
+  String? get currentStoreId => _prefs.getString(_kCurrentStoreId);
+
+  Future<void> setCurrentStoreId(String id) =>
+      _prefs.setString(_kCurrentStoreId, id);
+
+  /// Resolve markup for an item category label; falls back to global default.
+  /// Prefer [markupForCategoryId] when store DB margins are available.
   double markupForCategory(String? category) {
     if (category == null || category.trim().isEmpty) return defaultMarkupPct;
     final key = removeDiacritics(category);
