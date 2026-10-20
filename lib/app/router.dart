@@ -6,6 +6,7 @@ import '../features/items/item_form_screen.dart';
 import '../features/items/items_list_screen.dart';
 import '../features/pricing/compare_items_screen.dart';
 import '../features/ref_prices/ref_price_lookup_screen.dart';
+import '../features/scan/pending_supplements_screen.dart';
 import '../features/scan/scan_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/suppliers/suppliers_screen.dart';
@@ -21,6 +22,10 @@ GoRouter buildAppRouter({bool startOnScan = false}) {
       GoRoute(
         path: '/scan',
         builder: (context, state) => const ScanScreen(),
+      ),
+      GoRoute(
+        path: '/pending-supplements',
+        builder: (context, state) => const PendingSupplementsScreen(),
       ),
       GoRoute(
         path: '/suppliers',

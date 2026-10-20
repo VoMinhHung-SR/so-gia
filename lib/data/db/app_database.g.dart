@@ -5089,6 +5089,375 @@ class StarterPackItemsCompanion extends UpdateCompanion<StarterPackItem> {
   }
 }
 
+class $PendingSupplementsTable extends PendingSupplements
+    with TableInfo<$PendingSupplementsTable, PendingSupplement> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PendingSupplementsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _storeIdMeta = const VerificationMeta(
+    'storeId',
+  );
+  @override
+  late final GeneratedColumn<String> storeId = GeneratedColumn<String>(
+    'store_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES stores (id)',
+    ),
+  );
+  static const VerificationMeta _barcodeMeta = const VerificationMeta(
+    'barcode',
+  );
+  @override
+  late final GeneratedColumn<String> barcode = GeneratedColumn<String>(
+    'barcode',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _resolvedAtMeta = const VerificationMeta(
+    'resolvedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> resolvedAt = GeneratedColumn<DateTime>(
+    'resolved_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    storeId,
+    barcode,
+    createdAt,
+    resolvedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'pending_supplements';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PendingSupplement> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('store_id')) {
+      context.handle(
+        _storeIdMeta,
+        storeId.isAcceptableOrUnknown(data['store_id']!, _storeIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_storeIdMeta);
+    }
+    if (data.containsKey('barcode')) {
+      context.handle(
+        _barcodeMeta,
+        barcode.isAcceptableOrUnknown(data['barcode']!, _barcodeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_barcodeMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('resolved_at')) {
+      context.handle(
+        _resolvedAtMeta,
+        resolvedAt.isAcceptableOrUnknown(data['resolved_at']!, _resolvedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  PendingSupplement map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PendingSupplement(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      storeId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}store_id'],
+      )!,
+      barcode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}barcode'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      resolvedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}resolved_at'],
+      ),
+    );
+  }
+
+  @override
+  $PendingSupplementsTable createAlias(String alias) {
+    return $PendingSupplementsTable(attachedDatabase, alias);
+  }
+}
+
+class PendingSupplement extends DataClass
+    implements Insertable<PendingSupplement> {
+  final String id;
+  final String storeId;
+  final String barcode;
+  final DateTime createdAt;
+  final DateTime? resolvedAt;
+  const PendingSupplement({
+    required this.id,
+    required this.storeId,
+    required this.barcode,
+    required this.createdAt,
+    this.resolvedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['store_id'] = Variable<String>(storeId);
+    map['barcode'] = Variable<String>(barcode);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    if (!nullToAbsent || resolvedAt != null) {
+      map['resolved_at'] = Variable<DateTime>(resolvedAt);
+    }
+    return map;
+  }
+
+  PendingSupplementsCompanion toCompanion(bool nullToAbsent) {
+    return PendingSupplementsCompanion(
+      id: Value(id),
+      storeId: Value(storeId),
+      barcode: Value(barcode),
+      createdAt: Value(createdAt),
+      resolvedAt: resolvedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(resolvedAt),
+    );
+  }
+
+  factory PendingSupplement.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PendingSupplement(
+      id: serializer.fromJson<String>(json['id']),
+      storeId: serializer.fromJson<String>(json['storeId']),
+      barcode: serializer.fromJson<String>(json['barcode']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      resolvedAt: serializer.fromJson<DateTime?>(json['resolvedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'storeId': serializer.toJson<String>(storeId),
+      'barcode': serializer.toJson<String>(barcode),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'resolvedAt': serializer.toJson<DateTime?>(resolvedAt),
+    };
+  }
+
+  PendingSupplement copyWith({
+    String? id,
+    String? storeId,
+    String? barcode,
+    DateTime? createdAt,
+    Value<DateTime?> resolvedAt = const Value.absent(),
+  }) => PendingSupplement(
+    id: id ?? this.id,
+    storeId: storeId ?? this.storeId,
+    barcode: barcode ?? this.barcode,
+    createdAt: createdAt ?? this.createdAt,
+    resolvedAt: resolvedAt.present ? resolvedAt.value : this.resolvedAt,
+  );
+  PendingSupplement copyWithCompanion(PendingSupplementsCompanion data) {
+    return PendingSupplement(
+      id: data.id.present ? data.id.value : this.id,
+      storeId: data.storeId.present ? data.storeId.value : this.storeId,
+      barcode: data.barcode.present ? data.barcode.value : this.barcode,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      resolvedAt: data.resolvedAt.present
+          ? data.resolvedAt.value
+          : this.resolvedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PendingSupplement(')
+          ..write('id: $id, ')
+          ..write('storeId: $storeId, ')
+          ..write('barcode: $barcode, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('resolvedAt: $resolvedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, storeId, barcode, createdAt, resolvedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PendingSupplement &&
+          other.id == this.id &&
+          other.storeId == this.storeId &&
+          other.barcode == this.barcode &&
+          other.createdAt == this.createdAt &&
+          other.resolvedAt == this.resolvedAt);
+}
+
+class PendingSupplementsCompanion extends UpdateCompanion<PendingSupplement> {
+  final Value<String> id;
+  final Value<String> storeId;
+  final Value<String> barcode;
+  final Value<DateTime> createdAt;
+  final Value<DateTime?> resolvedAt;
+  final Value<int> rowid;
+  const PendingSupplementsCompanion({
+    this.id = const Value.absent(),
+    this.storeId = const Value.absent(),
+    this.barcode = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.resolvedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PendingSupplementsCompanion.insert({
+    required String id,
+    required String storeId,
+    required String barcode,
+    required DateTime createdAt,
+    this.resolvedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       storeId = Value(storeId),
+       barcode = Value(barcode),
+       createdAt = Value(createdAt);
+  static Insertable<PendingSupplement> custom({
+    Expression<String>? id,
+    Expression<String>? storeId,
+    Expression<String>? barcode,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? resolvedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (storeId != null) 'store_id': storeId,
+      if (barcode != null) 'barcode': barcode,
+      if (createdAt != null) 'created_at': createdAt,
+      if (resolvedAt != null) 'resolved_at': resolvedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PendingSupplementsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? storeId,
+    Value<String>? barcode,
+    Value<DateTime>? createdAt,
+    Value<DateTime?>? resolvedAt,
+    Value<int>? rowid,
+  }) {
+    return PendingSupplementsCompanion(
+      id: id ?? this.id,
+      storeId: storeId ?? this.storeId,
+      barcode: barcode ?? this.barcode,
+      createdAt: createdAt ?? this.createdAt,
+      resolvedAt: resolvedAt ?? this.resolvedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (storeId.present) {
+      map['store_id'] = Variable<String>(storeId.value);
+    }
+    if (barcode.present) {
+      map['barcode'] = Variable<String>(barcode.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (resolvedAt.present) {
+      map['resolved_at'] = Variable<DateTime>(resolvedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PendingSupplementsCompanion(')
+          ..write('id: $id, ')
+          ..write('storeId: $storeId, ')
+          ..write('barcode: $barcode, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('resolvedAt: $resolvedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -5109,6 +5478,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $StarterPackItemsTable starterPackItems = $StarterPackItemsTable(
     this,
   );
+  late final $PendingSupplementsTable pendingSupplements =
+      $PendingSupplementsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -5125,6 +5496,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     marginByCategory,
     starterPacks,
     starterPackItems,
+    pendingSupplements,
   ];
 }
 
@@ -6403,6 +6775,27 @@ final class $$StoresTableReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
+
+  static MultiTypedResultKey<$PendingSupplementsTable, List<PendingSupplement>>
+  _pendingSupplementsRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.pendingSupplements,
+        aliasName: 'stores__id__pending_supplements__store_id',
+      );
+
+  $$PendingSupplementsTableProcessedTableManager get pendingSupplementsRefs {
+    final manager = $$PendingSupplementsTableTableManager(
+      $_db,
+      $_db.pendingSupplements,
+    ).filter((f) => f.storeId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _pendingSupplementsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$StoresTableFilterComposer
@@ -6520,6 +6913,31 @@ class $$StoresTableFilterComposer
           }) => $$MarginByCategoryTableFilterComposer(
             $db: $db,
             $table: $db.marginByCategory,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> pendingSupplementsRefs(
+    Expression<bool> Function($$PendingSupplementsTableFilterComposer f) f,
+  ) {
+    final $$PendingSupplementsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.pendingSupplements,
+      getReferencedColumn: (t) => t.storeId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PendingSupplementsTableFilterComposer(
+            $db: $db,
+            $table: $db.pendingSupplements,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -6691,6 +7109,32 @@ class $$StoresTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> pendingSupplementsRefs<T extends Object>(
+    Expression<T> Function($$PendingSupplementsTableAnnotationComposer a) f,
+  ) {
+    final $$PendingSupplementsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.pendingSupplements,
+          getReferencedColumn: (t) => t.storeId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$PendingSupplementsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.pendingSupplements,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
 }
 
 class $$StoresTableTableManager
@@ -6710,6 +7154,7 @@ class $$StoresTableTableManager
             bool storeItemsRefs,
             bool suppliersRefs,
             bool marginByCategoryRefs,
+            bool pendingSupplementsRefs,
           })
         > {
   $$StoresTableTableManager(_$AppDatabase db, $StoresTable table)
@@ -6780,6 +7225,7 @@ class $$StoresTableTableManager
                 storeItemsRefs = false,
                 suppliersRefs = false,
                 marginByCategoryRefs = false,
+                pendingSupplementsRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -6787,6 +7233,7 @@ class $$StoresTableTableManager
                     if (storeItemsRefs) db.storeItems,
                     if (suppliersRefs) db.suppliers,
                     if (marginByCategoryRefs) db.marginByCategory,
+                    if (pendingSupplementsRefs) db.pendingSupplements,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -6854,6 +7301,27 @@ class $$StoresTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (pendingSupplementsRefs)
+                        await $_getPrefetchedData<
+                          Store,
+                          $StoresTable,
+                          PendingSupplement
+                        >(
+                          currentTable: table,
+                          referencedTable: $$StoresTableReferences
+                              ._pendingSupplementsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$StoresTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).pendingSupplementsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.storeId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -6878,6 +7346,7 @@ typedef $$StoresTableProcessedTableManager =
         bool storeItemsRefs,
         bool suppliersRefs,
         bool marginByCategoryRefs,
+        bool pendingSupplementsRefs,
       })
     >;
 typedef $$StoreItemsTableCreateCompanionBuilder = StoreItemsCompanion Function({
@@ -10207,6 +10676,339 @@ typedef $$StarterPackItemsTableProcessedTableManager =
       StarterPackItem,
       PrefetchHooks Function({bool packId, bool catalogId})
     >;
+typedef $$PendingSupplementsTableCreateCompanionBuilder =
+    PendingSupplementsCompanion Function({
+      required String id,
+      required String storeId,
+      required String barcode,
+      required DateTime createdAt,
+      Value<DateTime?> resolvedAt,
+      Value<int> rowid,
+    });
+typedef $$PendingSupplementsTableUpdateCompanionBuilder =
+    PendingSupplementsCompanion Function({
+      Value<String> id,
+      Value<String> storeId,
+      Value<String> barcode,
+      Value<DateTime> createdAt,
+      Value<DateTime?> resolvedAt,
+      Value<int> rowid,
+    });
+
+final class $$PendingSupplementsTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $PendingSupplementsTable,
+          PendingSupplement
+        > {
+  $$PendingSupplementsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $StoresTable _storeIdTable(_$AppDatabase db) =>
+      db.stores.createAlias('pending_supplements__store_id__stores__id');
+
+  $$StoresTableProcessedTableManager get storeId {
+    final $_column = $_itemColumn<String>('store_id')!;
+
+    final manager = $$StoresTableTableManager(
+      $_db,
+      $_db.stores,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_storeIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$PendingSupplementsTableFilterComposer
+    extends Composer<_$AppDatabase, $PendingSupplementsTable> {
+  $$PendingSupplementsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get barcode => $composableBuilder(
+    column: $table.barcode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get resolvedAt => $composableBuilder(
+    column: $table.resolvedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$StoresTableFilterComposer get storeId {
+    final $$StoresTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.storeId,
+      referencedTable: $db.stores,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$StoresTableFilterComposer(
+            $db: $db,
+            $table: $db.stores,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$PendingSupplementsTableOrderingComposer
+    extends Composer<_$AppDatabase, $PendingSupplementsTable> {
+  $$PendingSupplementsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get barcode => $composableBuilder(
+    column: $table.barcode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get resolvedAt => $composableBuilder(
+    column: $table.resolvedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$StoresTableOrderingComposer get storeId {
+    final $$StoresTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.storeId,
+      referencedTable: $db.stores,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$StoresTableOrderingComposer(
+            $db: $db,
+            $table: $db.stores,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$PendingSupplementsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PendingSupplementsTable> {
+  $$PendingSupplementsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get barcode =>
+      $composableBuilder(column: $table.barcode, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get resolvedAt => $composableBuilder(
+    column: $table.resolvedAt,
+    builder: (column) => column,
+  );
+
+  $$StoresTableAnnotationComposer get storeId {
+    final $$StoresTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.storeId,
+      referencedTable: $db.stores,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$StoresTableAnnotationComposer(
+            $db: $db,
+            $table: $db.stores,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$PendingSupplementsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PendingSupplementsTable,
+          PendingSupplement,
+          $$PendingSupplementsTableFilterComposer,
+          $$PendingSupplementsTableOrderingComposer,
+          $$PendingSupplementsTableAnnotationComposer,
+          $$PendingSupplementsTableCreateCompanionBuilder,
+          $$PendingSupplementsTableUpdateCompanionBuilder,
+          (PendingSupplement, $$PendingSupplementsTableReferences),
+          PendingSupplement,
+          PrefetchHooks Function({bool storeId})
+        > {
+  $$PendingSupplementsTableTableManager(
+    _$AppDatabase db,
+    $PendingSupplementsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PendingSupplementsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PendingSupplementsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PendingSupplementsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> storeId = const Value.absent(),
+                Value<String> barcode = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime?> resolvedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PendingSupplementsCompanion(
+                id: id,
+                storeId: storeId,
+                barcode: barcode,
+                createdAt: createdAt,
+                resolvedAt: resolvedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String storeId,
+                required String barcode,
+                required DateTime createdAt,
+                Value<DateTime?> resolvedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PendingSupplementsCompanion.insert(
+                id: id,
+                storeId: storeId,
+                barcode: barcode,
+                createdAt: createdAt,
+                resolvedAt: resolvedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$PendingSupplementsTable, PendingSupplement>(
+                    table,
+                  ),
+                  $$PendingSupplementsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({storeId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (storeId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.storeId,
+                        referencedTable: $$PendingSupplementsTableReferences
+                            ._storeIdTable(db),
+                        referencedColumn: $$PendingSupplementsTableReferences
+                            ._storeIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$PendingSupplementsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PendingSupplementsTable,
+      PendingSupplement,
+      $$PendingSupplementsTableFilterComposer,
+      $$PendingSupplementsTableOrderingComposer,
+      $$PendingSupplementsTableAnnotationComposer,
+      $$PendingSupplementsTableCreateCompanionBuilder,
+      $$PendingSupplementsTableUpdateCompanionBuilder,
+      (PendingSupplement, $$PendingSupplementsTableReferences),
+      PendingSupplement,
+      PrefetchHooks Function({bool storeId})
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -10233,4 +11035,6 @@ class $AppDatabaseManager {
       $$StarterPacksTableTableManager(_db, _db.starterPacks);
   $$StarterPackItemsTableTableManager get starterPackItems =>
       $$StarterPackItemsTableTableManager(_db, _db.starterPackItems);
+  $$PendingSupplementsTableTableManager get pendingSupplements =>
+      $$PendingSupplementsTableTableManager(_db, _db.pendingSupplements);
 }

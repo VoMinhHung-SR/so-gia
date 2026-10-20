@@ -42,3 +42,20 @@ bool matchesSearch(String haystack, String needle) {
   if (n.isEmpty) return true;
   return removeDiacritics(haystack).contains(n);
 }
+
+/// Token search: each needle word must match as substring or prefix of a
+/// haystack word (accent-insensitive). E.g. "nuoc mam" → "Nước mắm Nam Ngư".
+bool matchesSearchTokens(String haystack, String needle) {
+  final n = removeDiacritics(needle.trim());
+  if (n.isEmpty) return true;
+  final h = removeDiacritics(haystack);
+  if (h.contains(n)) return true;
+
+  final tokens = n.split(RegExp(r'\s+')).where((t) => t.isNotEmpty);
+  final words = h.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
+  for (final token in tokens) {
+    final hit = words.any((w) => w == token || w.startsWith(token) || w.contains(token));
+    if (!hit) return false;
+  }
+  return true;
+}

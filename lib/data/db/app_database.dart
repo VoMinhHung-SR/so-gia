@@ -23,6 +23,7 @@ part 'app_database.g.dart';
     MarginByCategory,
     StarterPacks,
     StarterPackItems,
+    PendingSupplements,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -30,7 +31,7 @@ class AppDatabase extends _$AppDatabase {
       : super(executor ?? driftDatabase(name: 'so_gia'));
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -42,6 +43,14 @@ class AppDatabase extends _$AppDatabase {
         onUpgrade: (m, from, to) async {
           if (from < 2) {
             await migrateV1toV2(this, m);
+          }
+          if (from < 3) {
+            await m.createTable(pendingSupplements);
+            await customStatement(
+              'CREATE UNIQUE INDEX IF NOT EXISTS pending_supplements_store_barcode '
+              'ON pending_supplements(store_id, barcode) '
+              'WHERE resolved_at IS NULL',
+            );
           }
         },
       );
@@ -220,23 +229,141 @@ class AppDatabase extends _$AppDatabase {
         .getSingleOrNull();
   }
 
-  Future<Item?> getItemByBarcode(String storeId, String barcode) async {
-    final cp = await (select(catalogProducts)
+  Future<CatalogProduct?> getCatalogByBarcode(String barcode) {
+    return (select(catalogProducts)
           ..where(
             (t) => t.barcode.equals(barcode) & t.deletedAt.isNull(),
           ))
         .getSingleOrNull();
-    if (cp == null) return null;
-    final si = await (select(storeItems)
+  }
+
+  Future<StoreItem?> getStoreItemForCatalog(String storeId, String catalogId) {
+    return (select(storeItems)
           ..where(
             (t) =>
                 t.storeId.equals(storeId) &
-                t.catalogId.equals(cp.id) &
+                t.catalogId.equals(catalogId) &
                 t.deletedAt.isNull(),
           ))
         .getSingleOrNull();
+  }
+
+  Future<Item?> getItemByBarcode(String storeId, String barcode) async {
+    final cp = await getCatalogByBarcode(barcode);
+    if (cp == null) return null;
+    final si = await getStoreItemForCatalog(storeId, cp.id);
     if (si == null) return null;
     return _toView(si);
+  }
+
+  Future<List<CatalogProduct>> listActiveCatalogProducts() {
+    return (select(catalogProducts)
+          ..where((t) => t.deletedAt.isNull())
+          ..orderBy([(t) => OrderingTerm.asc(t.nameSearch)]))
+        .get();
+  }
+
+  Future<List<CatalogProduct>> searchCatalog(String query, {int limit = 40}) async {
+    final all = await listActiveCatalogProducts();
+    final q = query.trim();
+    if (q.isEmpty) return all.take(limit).toList();
+
+    final byBarcode = await getCatalogByBarcode(q);
+    if (byBarcode != null) return [byBarcode];
+
+    final hits = all.where((p) {
+      final bag = [p.nameSearch, p.brand ?? '', p.barcode ?? '', p.categoryId]
+          .join(' ');
+      return matchesSearchTokens(bag, q);
+    }).take(limit);
+    return hits.toList();
+  }
+
+  Future<Item> addCatalogToStore({
+    required String storeId,
+    required String catalogId,
+  }) async {
+    final existing = await getStoreItemForCatalog(storeId, catalogId);
+    if (existing != null) {
+      return (await _toView(existing))!;
+    }
+    final cp = await getCatalogRowById(catalogId);
+    if (cp == null || cp.deletedAt != null) {
+      throw StateError('Catalog product not found: $catalogId');
+    }
+    final now = DateTime.now().toUtc();
+    final sid = newId();
+    await upsertStoreItem(
+      StoreItemsCompanion.insert(
+        id: sid,
+        storeId: storeId,
+        catalogId: catalogId,
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+    return (await getItemById(sid))!;
+  }
+
+  // --- Pending supplements (P8) ---
+
+  Stream<List<PendingSupplement>> watchPendingSupplements(String storeId) {
+    return (select(pendingSupplements)
+          ..where(
+            (t) => t.storeId.equals(storeId) & t.resolvedAt.isNull(),
+          )
+          ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
+        .watch();
+  }
+
+  Future<List<PendingSupplement>> listPendingSupplements(String storeId) {
+    return (select(pendingSupplements)
+          ..where(
+            (t) => t.storeId.equals(storeId) & t.resolvedAt.isNull(),
+          )
+          ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
+        .get();
+  }
+
+  Future<PendingSupplement?> findOpenPending(String storeId, String barcode) {
+    return (select(pendingSupplements)
+          ..where(
+            (t) =>
+                t.storeId.equals(storeId) &
+                t.barcode.equals(barcode) &
+                t.resolvedAt.isNull(),
+          ))
+        .getSingleOrNull();
+  }
+
+  Future<PendingSupplement> enqueuePendingSupplement({
+    required String storeId,
+    required String barcode,
+  }) async {
+    final existing = await findOpenPending(storeId, barcode);
+    if (existing != null) return existing;
+    final now = DateTime.now().toUtc();
+    final id = newId();
+    await into(pendingSupplements).insert(
+      PendingSupplementsCompanion.insert(
+        id: id,
+        storeId: storeId,
+        barcode: barcode.trim(),
+        createdAt: now,
+      ),
+    );
+    return (await (select(pendingSupplements)..where((t) => t.id.equals(id)))
+        .getSingle());
+  }
+
+  Future<void> resolvePendingSupplement(String id) async {
+    await (update(pendingSupplements)..where((t) => t.id.equals(id))).write(
+      PendingSupplementsCompanion(resolvedAt: Value(DateTime.now().toUtc())),
+    );
+  }
+
+  Future<void> deletePendingSupplement(String id) {
+    return (delete(pendingSupplements)..where((t) => t.id.equals(id))).go();
   }
 
   Future<void> upsertCatalogProduct(CatalogProductsCompanion row) {

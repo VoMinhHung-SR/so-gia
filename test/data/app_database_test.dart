@@ -17,7 +17,7 @@ void main() {
 
   test('ping and schema v2', () async {
     expect(await db.ping(), isTrue);
-    expect(db.schemaVersion, 2);
+    expect(db.schemaVersion, 3);
     final stores = await db.listActiveStores();
     expect(stores, isNotEmpty);
     expect(stores.first.id, kDefaultStoreId);

@@ -54,7 +54,7 @@ class ItemRepository {
         item.category ?? '',
         item.categoryId,
       ].join(' ');
-      return matchesSearch(bag, q);
+      return matchesSearchTokens(bag, q);
     }).toList();
   }
 
@@ -78,8 +78,7 @@ class ItemRepository {
     bool isWeighed = false,
     CatalogSource source = CatalogSource.user,
   }) {
-    final resolvedCategoryId =
-        categoryId ?? mapLegacyCategoryId(category);
+    final resolvedCategoryId = categoryId ?? mapLegacyCategoryId(category);
     return _db.saveStoreItem(
       storeId: storeId,
       storeItemId: id,
@@ -96,14 +95,20 @@ class ItemRepository {
     );
   }
 
+  /// Resolve order (P7.5): store item → catalog (not in store) → OFF → unknown.
   Future<BarcodeResolveResult> resolveBarcode(
     String storeId,
     String barcode,
   ) async {
     final code = barcode.trim();
-    final local = await _db.getItemByBarcode(storeId, code);
-    if (local != null) {
-      return BarcodeResolveResult.foundLocal(local);
+    final inStore = await _db.getItemByBarcode(storeId, code);
+    if (inStore != null) {
+      return BarcodeResolveResult.foundLocal(inStore);
+    }
+
+    final inCatalog = await _db.getCatalogByBarcode(code);
+    if (inCatalog != null) {
+      return BarcodeResolveResult.foundCatalog(inCatalog);
     }
 
     final off = await _off.fetchByBarcode(code);
@@ -121,6 +126,8 @@ sealed class BarcodeResolveResult {
   const BarcodeResolveResult();
 
   factory BarcodeResolveResult.foundLocal(Item item) = FoundLocal;
+  factory BarcodeResolveResult.foundCatalog(CatalogProduct product) =
+      FoundCatalog;
   factory BarcodeResolveResult.fromOff(OffProduct product) = PrefillFromOff;
   factory BarcodeResolveResult.unknown(String barcode) = UnknownBarcode;
 }
@@ -128,6 +135,11 @@ sealed class BarcodeResolveResult {
 class FoundLocal extends BarcodeResolveResult {
   const FoundLocal(this.item);
   final Item item;
+}
+
+class FoundCatalog extends BarcodeResolveResult {
+  const FoundCatalog(this.product);
+  final CatalogProduct product;
 }
 
 class PrefillFromOff extends BarcodeResolveResult {
