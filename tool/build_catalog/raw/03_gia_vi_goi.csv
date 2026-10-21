@@ -1,0 +1,13 @@
+name,brand,barcode,size_text,category_id,is_weighed,pack_ids,source_note
+Hạt nêm thịt gà,Knorr,,400 g,gia-vi-goi,false,tap-hoa,seed VN grocery
+Bột ngọt,Ajinomoto,,454 g,gia-vi-goi,false,tap-hoa,seed VN grocery
+Hạt nêm,Maggi,,400 g,gia-vi-goi,false,tap-hoa,seed VN grocery
+Bột canh,Ajinomoto,,200 g,gia-vi-goi,false,tap-hoa,seed VN grocery
+Đường cát trắng,Biên Hòa,,1 kg,gia-vi-goi,false,tap-hoa,seed VN grocery
+Đường vàng,Biên Hòa,,1 kg,gia-vi-goi,false,tap-hoa,seed VN grocery
+Muối i-ốt,Bạc Liêu,,1 kg,gia-vi-goi,false,tap-hoa,seed VN grocery
+Bột nghệ,Ông Chà Và,,50 g,gia-vi-goi,false,tap-hoa,seed VN grocery
+Bột cà ri,Ông Chà Và,,50 g,gia-vi-goi,false,tap-hoa,seed VN grocery
+Ngũ vị hương,Ông Chà Và,,20 g,gia-vi-goi,false,tap-hoa,seed VN grocery
+Bột tỏi,Ông Chà Và,,50 g,gia-vi-goi,false,tap-hoa,seed VN grocery
+Hạt nêm xương ống,Knorr,,400 g,gia-vi-goi,false,tap-hoa,seed VN grocery

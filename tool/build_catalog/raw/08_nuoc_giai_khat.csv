@@ -1,0 +1,9 @@
+name,brand,barcode,size_text,category_id,is_weighed,pack_ids,source_note
+Nước ngọt có gas,Coca-Cola,,1.5 l,nuoc-giai-khat,false,tap-hoa,seed VN grocery
+Nước suối,Aquafina,,500 ml,nuoc-giai-khat,false,tap-hoa,seed VN grocery
+Nước ngọt có gas,Pepsi,,1.5 l,nuoc-giai-khat,false,tap-hoa,seed VN grocery
+Nước tăng lực,Number 1,,330 ml,nuoc-giai-khat,false,tap-hoa,seed VN grocery
+Trà xanh,0 Độ,,500 ml,nuoc-giai-khat,false,tap-hoa,seed VN grocery
+Nước cam,Twister,,1 l,nuoc-giai-khat,false,tap-hoa,seed VN grocery
+Nước khoáng,Lavie,,500 ml,nuoc-giai-khat,false,tap-hoa,seed VN grocery
+Bia,Heineken,,330 ml,nuoc-giai-khat,false,tap-hoa,seed VN grocery
