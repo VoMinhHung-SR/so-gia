@@ -62,4 +62,100 @@ class StoreRepository {
   }) {
     return _db.createStore(name: name, type: type);
   }
+
+  Future<List<StarterPack>> listStarterPacks() => _db.listStarterPacks();
+
+  Future<List<StoreCreatePreviewRow>> previewStarterPack(String packId) async {
+    final items = await _db.listStarterPackItems(packId);
+    return _previewFromCatalogIds(
+      items.map(
+        (e) => (catalogId: e.catalogId, defaultSelected: e.defaultSelected),
+      ),
+    );
+  }
+
+  Future<List<StoreCreatePreviewRow>> previewStoreItems(String storeId) async {
+    final rows = await _db.listActiveStoreItemRows(storeId);
+    return _previewFromCatalogIds(
+      rows.map((e) => (catalogId: e.catalogId, defaultSelected: true)),
+    );
+  }
+
+  Future<List<StoreCreatePreviewRow>> _previewFromCatalogIds(
+    Iterable<({String catalogId, bool defaultSelected})> entries,
+  ) async {
+    final categories = {
+      for (final c in await _db.listCategories()) c.id: c,
+    };
+    final out = <StoreCreatePreviewRow>[];
+    for (final e in entries) {
+      final product = await _db.getCatalogRowById(e.catalogId);
+      if (product == null || product.deletedAt != null) continue;
+      final cat = categories[product.categoryId];
+      out.add(
+        StoreCreatePreviewRow(
+          catalogId: product.id,
+          name: product.name,
+          categoryId: product.categoryId,
+          categoryName: cat?.name ?? product.categoryId,
+          categorySort: cat?.sort ?? 999,
+          defaultSelected: e.defaultSelected,
+        ),
+      );
+    }
+    out.sort((a, b) {
+      final byCat = a.categorySort.compareTo(b.categorySort);
+      if (byCat != 0) return byCat;
+      return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+    });
+    return out;
+  }
+
+  Future<Store> createFromStarterPack({
+    required String name,
+    String? type,
+    required Iterable<String> catalogIds,
+  }) {
+    return _db.createStoreWithCatalogIds(
+      name: name,
+      type: type,
+      catalogIds: catalogIds,
+    );
+  }
+
+  Future<Store> cloneStore({
+    required String sourceStoreId,
+    required String name,
+    String? type,
+    required Iterable<String> catalogIds,
+    bool copySuppliers = false,
+    bool copyMargins = false,
+  }) {
+    return _db.cloneStore(
+      sourceStoreId: sourceStoreId,
+      name: name,
+      type: type,
+      catalogIds: catalogIds,
+      copySuppliers: copySuppliers,
+      copyMargins: copyMargins,
+    );
+  }
+}
+
+class StoreCreatePreviewRow {
+  const StoreCreatePreviewRow({
+    required this.catalogId,
+    required this.name,
+    required this.categoryId,
+    required this.categoryName,
+    required this.categorySort,
+    required this.defaultSelected,
+  });
+
+  final String catalogId;
+  final String name;
+  final String categoryId;
+  final String categoryName;
+  final int categorySort;
+  final bool defaultSelected;
 }

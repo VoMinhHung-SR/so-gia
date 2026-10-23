@@ -1,0 +1,5 @@
+name,brand,barcode,size_text,category_id,is_weighed,pack_ids,source_note
+Trứng gà công nghiệp,,,10 piece,trung,false,rau-cu-thit,seed VN grocery
+Trứng gà ta,,,10 piece,trung,false,rau-cu-thit,seed VN grocery
+Trứng vịt,,,10 piece,trung,false,rau-cu-thit,seed VN grocery
+Trứng cút,,,20 piece,trung,false,rau-cu-thit,seed VN grocery

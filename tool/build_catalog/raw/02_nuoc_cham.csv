@@ -1,0 +1,11 @@
+name,brand,barcode,size_text,category_id,is_weighed,pack_ids,source_note
+Nước mắm Phú Quốc,Nam Ngư,,0.5 l,nuoc-cham,false,tap-hoa,seed VN grocery
+Nước tương đậu nành,Maggi,,0.7 l,nuoc-cham,false,tap-hoa,seed VN grocery
+Nước mắm,Chin-su,,500 ml,nuoc-cham,false,tap-hoa,seed VN grocery
+Nước mắm,Barona,,500 ml,nuoc-cham,false,tap-hoa,seed VN grocery
+Nước tương,Chinsu,,500 ml,nuoc-cham,false,tap-hoa,seed VN grocery
+Tương ớt,Cholimex,,250 g,nuoc-cham,false,tap-hoa,seed VN grocery
+Tương cà,Cholimex,,250 g,nuoc-cham,false,tap-hoa,seed VN grocery
+Giấm lên men,Lợi An,,500 ml,nuoc-cham,false,tap-hoa,seed VN grocery
+Dầu hào,Maggi,,350 g,nuoc-cham,false,tap-hoa,seed VN grocery
+Nước mắm nhỉ,Phú Quốc,,500 ml,nuoc-cham,false,tap-hoa,seed VN grocery

@@ -1,0 +1,721 @@
+{
+  "pack_version": 1,
+  "packs": [
+    {
+      "id": "tap-hoa",
+      "name": "Tạp hóa",
+      "description": "Nhu yếu phẩm đóng gói, gia dụng, đồ khô",
+      "items": [
+        {
+          "catalog_id": "c7a00001-0000-4000-8000-000000000001",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "c7a00002-0000-4000-8000-000000000002",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "5f7160b4-1b0e-4d18-b974-ea05a5fbc163",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "4a354772-04b2-439c-af92-1ae1716dcc86",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "74af06c2-0f29-43aa-8736-a0a658af3532",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "1a809217-57d5-463f-9788-44b1c7dc58ba",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "23a5fe7b-366f-4fd5-8370-048e658c6681",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "0e643d67-e438-4c70-aeb0-075fa33aa456",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "c7a00003-0000-4000-8000-000000000003",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "c7a00004-0000-4000-8000-000000000004",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "c6115497-bdc4-4780-b92e-3cc54e1b3341",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "0251b141-5b99-44bb-8f41-c1e6059ffcc1",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "0ab312db-01c3-4da7-942c-6f8a8a216228",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "c64b37d3-b3eb-4765-afab-842884299670",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "633c9586-5422-4b6a-b59f-6d47a1201714",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "4b3f18b9-a67d-429c-94fa-23b0ece200c1",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "0533348a-bc7d-43e8-b79d-f7d5d12f64c2",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "a93bafdd-474f-43f4-b6de-0ce33398d49f",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "c7a00005-0000-4000-8000-000000000005",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "c7a00006-0000-4000-8000-000000000006",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "8ef2b72c-21b4-4168-9dfc-a8f4903258bd",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "f23351d2-9f95-49f6-abc1-48d751a63a2a",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "0e217d5c-9c33-4c48-84b1-4a9d40dd2ca5",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "1d28cb9d-988a-45f8-856e-200e16609742",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "b43a8423-75a0-4938-a49b-eef7790b1487",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "087f10e2-ed34-4614-bde9-627ad833f821",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "30dd171a-38ce-4a81-8fa0-40ead06b8a02",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "37fda7aa-9137-4122-86bc-e364d38840a5",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "ffa572e5-1659-4def-9e62-e2ca098838d8",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "9f02249e-2ab8-46d6-b2b5-95b8f60199b6",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "c7a00007-0000-4000-8000-000000000007",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "c7a00008-0000-4000-8000-000000000008",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "946aee9d-c03e-4193-a696-7f204e8f59f3",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "aa56212b-6c61-4b89-b385-339cbb0b6323",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "a4cb0851-ff92-4dce-bbf7-edde0da69f82",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "dc01f637-fb7c-45db-9b2e-f95242f37fe4",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "d150dd25-39a6-48a7-b888-c11b019a5ee0",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "8a85fea3-b236-4e4c-ab80-4c42f92c49d3",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "8037c3fa-2f8c-4755-a116-8e44e9dc9c20",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "9f30019f-2ac2-4ccd-b5c7-a8b061b2d154",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "c7a00009-0000-4000-8000-000000000009",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "c7a0000a-0000-4000-8000-000000000010",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "be1e4511-362d-4ef0-b229-6e11d7111ade",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "ebdfdf25-75b1-4100-a184-26cbeb4661e6",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "938ead8c-3aef-46af-b8ee-2348c9dd0292",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "3bf79da6-481c-4aed-8a39-2425bdf0fa34",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "e73b6441-4e11-4487-b2d7-b3907b20287f",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "020fe0c3-4347-4db1-bdb2-beb4c2bc544c",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "1c27fa88-5eb4-4bc9-a55d-78c15179da71",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "f41a997c-e8a0-468a-8c9c-beccb794bfe7",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "c7a0000b-0000-4000-8000-000000000011",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "c7a0000c-0000-4000-8000-000000000012",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "5d935b20-599a-4e13-a1dc-3093664cd221",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "b4e2002f-516d-419e-ae1e-6f56bfa181e3",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "4efa3b8c-6a1b-44ab-ba5b-573cac259089",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "8976bffd-0c7c-4736-8b41-a7ead73f25f6",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "e2eae8d4-8528-4e36-9852-19e1aa50de03",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "cfa29c45-7968-42c8-8b86-4a31f5cf5bfe",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "c7a0000d-0000-4000-8000-000000000013",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "c7a0000e-0000-4000-8000-000000000014",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "d37b00d3-2748-4382-aa81-1186df137b04",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "68d8b542-f67b-45f7-bc19-c442ee8561c6",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "36080e60-6a87-4d70-a6e8-5b28bc05d572",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "0255c6f7-486f-4713-b7aa-8f94342e31d6",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "c243fe01-65f6-4d6b-88bc-af4e3cc5d856",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "f44f2c36-3bf6-4bd9-a5ae-5a06837c4f88",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "c7a0000f-0000-4000-8000-000000000015",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "c7a00010-0000-4000-8000-000000000016",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "2c207153-db77-457f-8321-09b3589b4792",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "20c08262-cbea-4af6-aecf-3349416c5468",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "bf5b010d-366a-4c65-8e3e-314615abab17",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "ba41dcff-1935-4132-887d-88b3f3d43e8a",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "1fd543fd-8d63-4b5c-b22d-0baf2275410c",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "92d8959e-ec70-4e81-8be5-40d69ce46f70",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "af54bfa1-87fa-4c5b-be6a-78ca0004e177",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "41e0e3e3-47c1-428c-913f-2d155a96e7ef",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "ab96641b-88d2-4e39-b1f2-052c340aa45d",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "c732ff18-06d0-4e29-92f4-19e3ec984a70",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "c7a00012-0000-4000-8000-000000000018",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "f5a07548-fb1c-4d78-9c35-d2cf1b004f92",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "264c6bea-e064-496b-97ab-ea657bc7de78",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "f3c4c469-6a9b-4a37-96c8-a196dd71e53a",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "f7c61405-6cfc-4e05-b916-dcf15c6c7cbe",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "3d699456-a5e0-4748-a031-b732ef49c0aa",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "1d1e8e61-b9d4-4e6b-bdd8-00393e5268f0",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "a7d71d85-e809-46c5-b3af-20320aca2c6c",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "c7a00013-0000-4000-8000-000000000019",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "f266712b-f156-47b3-875f-e280efc4f135",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "b3b6b17e-7b6e-4b03-918b-7e67093fb9b7",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "51ed38b0-29dd-479f-9c0b-584699ee4831",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "f1b2fd66-84ec-406e-91c7-8c638bace53b",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "8b319225-edce-48b5-b838-100a08dae6d6",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "c7a00014-0000-4000-8000-000000000020",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "9f15c4df-554d-439e-8c2e-a79424f3ea50",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "18354cee-830b-4ba0-8d7e-6178a5b14866",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "50b0eec5-1353-46bf-ba9d-1ea846a2de46",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "6bd563f9-8d4a-4af5-bcb9-4152e0845069",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "454484d4-744c-47c5-9102-29c51b2f4960",
+          "default_selected": true
+        }
+      ]
+    },
+    {
+      "id": "rau-cu-thit",
+      "name": "Quầy rau củ - thịt",
+      "description": "Rau, củ, trái cây, thịt, cá, trứng, gia vị cân",
+      "items": [
+        {
+          "catalog_id": "c7a00015-0000-4000-8000-000000000021",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "c7a00016-0000-4000-8000-000000000022",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "c7a00017-0000-4000-8000-000000000023",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "2947e371-4f8c-4668-a695-60281e132855",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "8e6c080d-fa5b-4eaf-a4b4-22eb91dbbc69",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "bfdd385d-0143-4a4e-bcfd-87b459633510",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "7de9ed0f-ad52-44cc-b80c-d6a958ef8b01",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "a5dd3e34-4a12-420d-9dcf-e2fbb1c48a70",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "7dbee9c2-f3eb-425b-9174-2d2f467444b9",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "964ab75d-32b8-4dba-ab9f-31e34c4c13fa",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "0cbcf990-7cbc-4c81-85c7-d1c284153a55",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "2d91f974-fb53-4258-958a-ce82f18fa793",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "c7a00018-0000-4000-8000-000000000024",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "c7a00019-0000-4000-8000-000000000025",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "c7a0001a-0000-4000-8000-000000000026",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "c7a0001b-0000-4000-8000-000000000027",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "c7a00025-0000-4000-8000-000000000037",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "4e77c24f-1db9-4f07-98ed-b5504af733bd",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "86776d4e-79f1-4d96-9060-d9dd96c3a201",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "05672d51-6919-4bcd-9d80-550106a01f72",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "d3d3f3d5-25a4-4c24-8d60-13a37f6c7eda",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "b2d27cb6-54d8-4fe5-aa22-b7c29afa0a76",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "b4c27964-1204-4095-a1e7-b4472b15e45c",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "8f513884-a412-4a6d-9e3a-8d19ed03c259",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "e4d60997-1ad8-4e75-8137-f76f31c42999",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "d81b3b18-ed3e-4d0a-a0eb-72678b3a4d05",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "95c1bcc0-7bc3-4eb9-af8e-38efdff8a1fd",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "6a91239f-53d8-4b8a-8d30-8484a9ee7dd4",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "89f860f5-e241-4cc3-89fd-d7d8926796ae",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "4a9912f5-9cf2-4b1f-a610-22a8d5a9066f",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "2721d0fc-3929-404a-b03e-994ea40d1ba2",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "474db329-fee6-43d1-9760-e4767aae103d",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "848180ea-eb65-4162-b66f-ff12dfff9ef9",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "06f2250c-d724-4b80-99fc-673573f6884e",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "c8ce4556-120a-40f9-b888-61aa0c98cc0d",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "55c2af7e-21fd-46fa-ba83-dd9614b3c30d",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "858ced78-f723-47ac-aca3-e7cedbf715b1",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "c7a0001c-0000-4000-8000-000000000028",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "c7a0001d-0000-4000-8000-000000000029",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "c7a0001e-0000-4000-8000-000000000030",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "c7a00026-0000-4000-8000-000000000038",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "2c9e42af-5a2b-4212-b184-ce141654cc0c",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "6139d466-b5ba-4c5a-b17b-d7ef4ea51622",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "2870f0ea-8e7a-4269-be54-ca6d749ae2db",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "29ef69fa-32fc-4df0-9b4c-52a3192ee537",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "42f92848-2b7b-4b1b-8089-ae7b0776bf95",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "2295b685-dc4a-4949-8e49-f23b3d69295f",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "2797fc06-eae0-4822-8344-a8a4878c0e59",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "04ecfb89-97b1-450f-acd4-193fc28409e3",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "c7a0001f-0000-4000-8000-000000000031",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "c7a00020-0000-4000-8000-000000000032",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "c7a00021-0000-4000-8000-000000000033",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "c7a00027-0000-4000-8000-000000000039",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "d12f0efc-5a62-48f9-b916-3d3fd9f868ca",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "0d18efc0-46f4-416d-bb73-4319c49c9b5c",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "8e30b3e0-739c-436a-b630-d40cefdd19c8",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "d7529a38-6488-48fe-9c3f-78eaeaa7da5d",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "7e0548f0-1df0-448d-b716-060e55a5313e",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "8bc2a16d-cdaf-4308-8165-319c2a7d1dd4",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "b9dbabf6-66e1-4d39-9392-418a66c16eb1",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "5eda593e-a84b-405b-a372-43abef8da201",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "c7a00022-0000-4000-8000-000000000034",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "c7a00023-0000-4000-8000-000000000035",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "c7a00024-0000-4000-8000-000000000036",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "c7a00028-0000-4000-8000-000000000040",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "3edb088d-5d7f-45bc-94ee-b349326862ed",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "4658f5a5-2d3d-4441-8b87-12ed6b1c2393",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "8bbae9bb-8f1e-45c0-bdb5-60fc26530359",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "32307cc8-f1a6-480a-bfac-d8276fe387b8",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "29949737-f457-480d-a132-08f986840300",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "02a8f849-c3fd-4c03-aea1-c74cf78141c0",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "c7a00011-0000-4000-8000-000000000017",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "85bc8f69-6ff9-4921-a945-4d905df7ebcf",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "97f8f90c-3b89-4d98-b89d-ba68cea6bedf",
+          "default_selected": true
+        },
+        {
+          "catalog_id": "4918ac29-5963-4872-9b8f-a97a943757eb",
+          "default_selected": true
+        }
+      ]
+    },
+    {
+      "id": "sieu-thi-mini",
+      "name": "Siêu thị mini",
+      "description": "Gộp Tạp hóa + Rau củ - thịt",
+      "includes": [
+        "tap-hoa",
+        "rau-cu-thit"
+      ],
+      "items": []
+    }
+  ]
+}

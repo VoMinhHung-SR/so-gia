@@ -1,0 +1,9 @@
+name,brand,barcode,size_text,category_id,is_weighed,pack_ids,source_note
+Sữa tươi tiệt trùng,TH true MILK,,1 l,sua,false,tap-hoa,seed VN grocery
+Sữa đặc có đường,Vinamilk,,380 g,sua,false,tap-hoa,seed VN grocery
+Sữa tươi tiệt trùng,Vinamilk,,1 l,sua,false,tap-hoa,seed VN grocery
+Sữa chua ăn,Vinamilk,,100 g,sua,false,tap-hoa,seed VN grocery
+Sữa chua uống,Yakult,,65 ml,sua,false,tap-hoa,seed VN grocery
+Sữa đậu nành,Fami,,200 ml,sua,false,tap-hoa,seed VN grocery
+Bơ thực vật,Tường An,,200 g,sua,false,tap-hoa,seed VN grocery
+Phô mai lát,Laughing Cow,,200 g,sua,false,tap-hoa,seed VN grocery

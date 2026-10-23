@@ -47,6 +47,7 @@ class ItemsListScreen extends ConsumerWidget {
 
     final query = ref.watch(searchQueryProvider).trim();
     final searching = query.isNotEmpty;
+    final colors = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(
@@ -88,28 +89,47 @@ class ItemsListScreen extends ConsumerWidget {
       body: Column(
         children: [
           if (ref.watch(appSettingsProvider).needsBackupReminder)
-            Card(
+            Container(
               margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-              color: Theme.of(context).colorScheme.errorContainer,
-              child: ListTile(
-                dense: true,
-                title: const Text('Nên xuất sao lưu CSV'),
-                subtitle: const Text('Đã > 7 ngày hoặc chưa từng xuất.'),
-                trailing: TextButton(
-                  onPressed: () => context.push('/backup'),
-                  child: const Text('Sao lưu'),
+              child: Card(
+                color: colors.errorContainer,
+                child: ListTile(
+                  dense: true,
+                  title: const Text('Nên xuất sao lưu CSV'),
+                  subtitle: const Text('Đã > 7 ngày hoặc chưa từng xuất.'),
+                  trailing: TextButton(
+                    onPressed: () => context.push('/backup'),
+                    child: const Text('Sao lưu'),
+                  ),
                 ),
               ),
             ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-            child: TextField(
-              decoration: const InputDecoration(
-                hintText: 'Tìm tên, hãng, mã vạch…',
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
+            child: Container(
+              decoration: BoxDecoration(
+                color: colors.surfaceContainerHighest.withOpacity(0.7),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: colors.outlineVariant,
+                  width: 1,
+                ),
               ),
-              onChanged: (v) => ref.read(searchQueryProvider.notifier).set(v),
+              child: TextField(
+                textInputAction: TextInputAction.search,
+                decoration: InputDecoration(
+                  hintText: 'Tìm tên, hãng, mã vạch…',
+                  prefixIcon: Icon(Icons.search, color: colors.primary),
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                ),
+                onChanged: (v) => ref.read(searchQueryProvider.notifier).set(v),
+              ),
             ),
           ),
           Expanded(
@@ -304,44 +324,49 @@ class _CatalogProductTileState extends ConsumerState<_CatalogProductTile> {
       if (p.barcode != null && p.barcode!.isNotEmpty) p.barcode!,
     ].join(' · ');
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        ListTile(
-          title: Text(p.name),
-          subtitle: Text(subtitle.isEmpty ? '—' : subtitle),
-          trailing: _adding
-              ? const SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : IconButton(
-                  tooltip: 'Thêm vào cửa hàng',
-                  icon: const Icon(Icons.add),
-                  onPressed: _addToStore,
-                ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+      child: Card(
+        margin: EdgeInsets.zero,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ListTile(
+              title: Text(p.name),
+              subtitle: Text(subtitle.isEmpty ? '—' : subtitle),
+              trailing: _adding
+                  ? const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : IconButton(
+                      tooltip: 'Thêm vào cửa hàng',
+                      icon: const Icon(Icons.add),
+                      onPressed: _addToStore,
+                    ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: Wrap(
+                spacing: 4,
+                runSpacing: 4,
+                children: [
+                  for (final s in kSupermarketSources)
+                    TextButton(
+                      style: TextButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                      ),
+                      onPressed: () => _openSupermarket(s),
+                      child: Text(s.label),
+                    ),
+                ],
+              ),
+            ),
+          ],
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-          child: Wrap(
-            spacing: 4,
-            runSpacing: 0,
-            children: [
-              for (final s in kSupermarketSources)
-                TextButton(
-                  style: TextButton.styleFrom(
-                    visualDensity: VisualDensity.compact,
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                  ),
-                  onPressed: () => _openSupermarket(s),
-                  child: Text(s.label),
-                ),
-            ],
-          ),
-        ),
-        const Divider(height: 1),
-      ],
+      ),
     );
   }
 }
@@ -390,16 +415,32 @@ class _ItemTileState extends ConsumerState<_ItemTile> {
       if (item.barcode != null) item.barcode!,
     ].join(' · ');
 
-    return ListTile(
-      title: Text(item.resolvedName),
-      subtitle: Text(subtitle.isEmpty ? '—' : subtitle),
-      trailing: _latestPrice == null
-          ? null
-          : Text(
-              formatVnd(_latestPrice!),
-              style: const TextStyle(fontWeight: FontWeight.w600),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      child: Card(
+        margin: EdgeInsets.zero,
+        child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          leading: CircleAvatar(
+            radius: 18,
+            backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+            child: Icon(
+              item.isWeighed ? Icons.scale : Icons.local_offer_outlined,
+              color: Theme.of(context).colorScheme.onPrimaryContainer,
+              size: 18,
             ),
-      onTap: () => context.push('/items/${item.id}'),
+          ),
+          title: Text(item.resolvedName),
+          subtitle: Text(subtitle.isEmpty ? '—' : subtitle),
+          trailing: _latestPrice == null
+              ? null
+              : Text(
+                  formatVnd(_latestPrice!),
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+          onTap: () => context.push('/items/${item.id}'),
+        ),
+      ),
     );
   }
 }
@@ -432,58 +473,68 @@ class _EmptyCatalogState extends State<_EmptyCatalog> {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Chưa có mặt hàng',
-              style: Theme.of(context).textTheme.titleLarge,
+        child: Card(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.inventory_2_outlined,
+                  size: 48,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Chưa có mặt hàng',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Quét mã, thêm mới, hoặc nạp bộ demo ~24 SKU để thử P4.',
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                FilledButton.icon(
+                  onPressed: _busy
+                      ? null
+                      : () async {
+                          setState(() => _busy = true);
+                          try {
+                            final storeId = widget.ref.read(currentStoreIdProvider);
+                            final r = await DemoSeedService(
+                              widget.ref.read(databaseProvider),
+                            ).seedIfEmpty(storeId: storeId);
+                            if (!context.mounted) return;
+                            if (r == null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Đã có dữ liệu')),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Đã nạp ${r.items} mặt hàng · ${r.suppliers} NCC',
+                                  ),
+                                ),
+                              );
+                            }
+                          } finally {
+                            if (mounted) setState(() => _busy = false);
+                          }
+                        },
+                  icon: const Icon(Icons.dataset),
+                  label: Text(_busy ? 'Đang nạp…' : 'Nạp dữ liệu demo'),
+                ),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: () => context.push('/scan'),
+                  icon: const Icon(Icons.qr_code_scanner),
+                  label: const Text('Quét / tra mã'),
+                ),
+              ],
             ),
-            const SizedBox(height: 8),
-            const Text(
-              'Quét mã, thêm mới, hoặc nạp bộ demo ~24 SKU để thử P4.',
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            FilledButton.icon(
-              onPressed: _busy
-                  ? null
-                  : () async {
-                      setState(() => _busy = true);
-                      try {
-                        final storeId =
-                            widget.ref.read(currentStoreIdProvider);
-                        final r = await DemoSeedService(
-                          widget.ref.read(databaseProvider),
-                        ).seedIfEmpty(storeId: storeId);
-                        if (!context.mounted) return;
-                        if (r == null) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Đã có dữ liệu')),
-                          );
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Đã nạp ${r.items} mặt hàng · ${r.suppliers} NCC',
-                              ),
-                            ),
-                          );
-                        }
-                      } finally {
-                        if (mounted) setState(() => _busy = false);
-                      }
-                    },
-              icon: const Icon(Icons.dataset),
-              label: Text(_busy ? 'Đang nạp…' : 'Nạp dữ liệu demo'),
-            ),
-            const SizedBox(height: 8),
-            OutlinedButton.icon(
-              onPressed: () => context.push('/scan'),
-              icon: const Icon(Icons.qr_code_scanner),
-              label: const Text('Quét / tra mã'),
-            ),
-          ],
+          ),
         ),
       ),
     );

@@ -109,6 +109,116 @@ class AppDatabase extends _$AppDatabase {
     return (await getStoreById(id))!;
   }
 
+  Future<List<StoreItem>> listActiveStoreItemRows(String storeId) {
+    return (select(storeItems)
+          ..where(
+            (t) => t.storeId.equals(storeId) & t.deletedAt.isNull(),
+          ))
+        .get();
+  }
+
+  Future<int> countPurchasesForStore(String storeId) async {
+    final rows = await listActiveStoreItemRows(storeId);
+    var n = 0;
+    for (final si in rows) {
+      n += (await listPurchasesForItem(si.id)).length;
+    }
+    return n;
+  }
+
+  Future<int> countSellPricesForStore(String storeId) async {
+    final rows = await listActiveStoreItemRows(storeId);
+    var n = 0;
+    for (final si in rows) {
+      final prices = await (select(sellPrices)
+            ..where((t) => t.itemId.equals(si.id)))
+          .get();
+      n += prices.length;
+    }
+    return n;
+  }
+
+  /// Copies [store_items] (and optionally NCC / % lời). Never copies
+  /// [purchases] or [sell_prices].
+  Future<Store> cloneStore({
+    required String sourceStoreId,
+    required String name,
+    String? type,
+    required Iterable<String> catalogIds,
+    bool copySuppliers = false,
+    bool copyMargins = false,
+  }) async {
+    final source = await getStoreById(sourceStoreId);
+    if (source == null) {
+      throw StateError('Source store not found: $sourceStoreId');
+    }
+    final dest = await createStore(
+      name: name,
+      type: type ?? source.type,
+      defaultMarginPct: copyMargins ? source.defaultMarginPct : 20,
+      roundingStep: copyMargins ? source.roundingStep : 500,
+    );
+
+    final wanted = catalogIds.toSet();
+    final now = DateTime.now().toUtc();
+    for (final si in await listActiveStoreItemRows(sourceStoreId)) {
+      if (!wanted.contains(si.catalogId)) continue;
+      await upsertStoreItem(
+        StoreItemsCompanion.insert(
+          id: newId(),
+          storeId: dest.id,
+          catalogId: si.catalogId,
+          displayName: Value(si.displayName),
+          isActive: Value(si.isActive),
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
+    }
+
+    if (copyMargins) {
+      for (final m in await listMarginsForStore(sourceStoreId)) {
+        await upsertMargin(
+          MarginByCategoryCompanion.insert(
+            storeId: dest.id,
+            categoryId: m.categoryId,
+            marginPct: m.marginPct,
+          ),
+        );
+      }
+    }
+
+    if (copySuppliers) {
+      for (final s in await listActiveSuppliers(sourceStoreId)) {
+        await upsertSupplier(
+          SuppliersCompanion.insert(
+            id: newId(),
+            storeId: dest.id,
+            name: s.name,
+            phone: Value(s.phone),
+            note: Value(s.note),
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+      }
+    }
+
+    return dest;
+  }
+
+  Future<Store> createStoreWithCatalogIds({
+    required String name,
+    String? type,
+    required Iterable<String> catalogIds,
+  }) async {
+    final dest = await createStore(name: name, type: type);
+    for (final catalogId in catalogIds) {
+      await addCatalogToStore(storeId: dest.id, catalogId: catalogId);
+    }
+    return dest;
+  }
+
   // --- Categories / margins ---
 
   Future<List<Category>> listCategories() {
@@ -179,15 +289,54 @@ class AppDatabase extends _$AppDatabase {
     );
   }
 
-  Future<List<Item>> listActiveItems(String storeId) async {
-    final rows = await (_activeStoreItems(storeId)
-          ..orderBy([(t) => OrderingTerm.asc(t.id)]))
-        .get();
+  Future<List<Item>> _itemsFromStoreRows(List<StoreItem> rows) async {
+    if (rows.isEmpty) return const [];
+
+    final catalogIds = rows.map((si) => si.catalogId).toSet();
+    final catalogRows = catalogIds.isEmpty
+        ? const <CatalogProduct>[]
+        : await (select(catalogProducts)
+              ..where((t) => t.id.isIn(catalogIds)))
+            .get();
+    final catalogById = {for (final cp in catalogRows) cp.id: cp};
+
+    final categoryIds = catalogRows
+        .map((cp) => cp.categoryId)
+        .toSet()
+        .toList(growable: false);
+    final categoryRows = categoryIds.isEmpty
+        ? const <Category>[]
+        : await (select(categories)
+              ..where((t) => t.id.isIn(categoryIds)))
+            .get();
+    final categoryById = {for (final c in categoryRows) c.id: c};
+
     final out = <Item>[];
     for (final si in rows) {
-      final view = await _toView(si);
-      if (view != null) out.add(view);
+      final cp = catalogById[si.catalogId];
+      if (cp == null) continue;
+      out.add(
+        Item(
+          id: si.id,
+          catalogId: si.catalogId,
+          storeId: si.storeId,
+          barcode: cp.barcode,
+          name: cp.name,
+          brand: cp.brand,
+          unitSize: cp.unitSize,
+          unitType: cp.unitType,
+          categoryId: cp.categoryId,
+          category: categoryById[cp.categoryId]?.name,
+          isWeighed: cp.isWeighed,
+          source: cp.source,
+          displayName: si.displayName,
+          createdAt: si.createdAt,
+          updatedAt: si.updatedAt,
+          deletedAt: si.deletedAt,
+        ),
+      );
     }
+
     out.sort(
       (a, b) => a.resolvedName.toLowerCase().compareTo(
             b.resolvedName.toLowerCase(),
@@ -196,19 +345,16 @@ class AppDatabase extends _$AppDatabase {
     return out;
   }
 
+  Future<List<Item>> listActiveItems(String storeId) async {
+    final rows = await (_activeStoreItems(storeId)
+          ..orderBy([(t) => OrderingTerm.asc(t.id)]))
+        .get();
+    return _itemsFromStoreRows(rows);
+  }
+
   Stream<List<Item>> watchActiveItems(String storeId) {
     return (_activeStoreItems(storeId)).watch().asyncMap((rows) async {
-      final out = <Item>[];
-      for (final si in rows) {
-        final view = await _toView(si);
-        if (view != null) out.add(view);
-      }
-      out.sort(
-        (a, b) => a.resolvedName.toLowerCase().compareTo(
-              b.resolvedName.toLowerCase(),
-            ),
-      );
-      return out;
+      return _itemsFromStoreRows(rows);
     });
   }
 
@@ -217,7 +363,8 @@ class AppDatabase extends _$AppDatabase {
           ..where((t) => t.id.equals(storeItemId) & t.deletedAt.isNull()))
         .getSingleOrNull();
     if (si == null) return null;
-    return _toView(si);
+    final items = await _itemsFromStoreRows([si]);
+    return items.isEmpty ? null : items.first;
   }
 
   Future<StoreItem?> getStoreItemRowById(String id) {
@@ -253,7 +400,8 @@ class AppDatabase extends _$AppDatabase {
     if (cp == null) return null;
     final si = await getStoreItemForCatalog(storeId, cp.id);
     if (si == null) return null;
-    return _toView(si);
+    final items = await _itemsFromStoreRows([si]);
+    return items.isEmpty ? null : items.first;
   }
 
   Future<List<CatalogProduct>> listActiveCatalogProducts() {
@@ -264,13 +412,16 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<List<CatalogProduct>> searchCatalog(String query, {int limit = 40}) async {
-    final all = await listActiveCatalogProducts();
     final q = query.trim();
-    if (q.isEmpty) return all.take(limit).toList();
+    if (q.isEmpty) {
+      final all = await listActiveCatalogProducts();
+      return all.take(limit).toList();
+    }
 
     final byBarcode = await getCatalogByBarcode(q);
     if (byBarcode != null) return [byBarcode];
 
+    final all = await listActiveCatalogProducts();
     final hits = all.where((p) {
       final bag = [p.nameSearch, p.brand ?? '', p.barcode ?? '', p.categoryId]
           .join(' ');
@@ -368,6 +519,36 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> upsertCatalogProduct(CatalogProductsCompanion row) {
     return into(catalogProducts).insertOnConflictUpdate(row);
+  }
+
+  Future<void> upsertStarterPack(StarterPacksCompanion row) {
+    return into(starterPacks).insertOnConflictUpdate(row);
+  }
+
+  /// Replaces all items for [packId] (P9 seed / P10 create-store).
+  Future<void> replaceStarterPackItems({
+    required String packId,
+    required List<({String catalogId, bool defaultSelected})> items,
+  }) async {
+    await (delete(starterPackItems)..where((t) => t.packId.equals(packId))).go();
+    for (final item in items) {
+      await into(starterPackItems).insert(
+        StarterPackItemsCompanion.insert(
+          packId: packId,
+          catalogId: item.catalogId,
+          defaultSelected: Value(item.defaultSelected),
+        ),
+      );
+    }
+  }
+
+  Future<List<StarterPack>> listStarterPacks() {
+    return select(starterPacks).get();
+  }
+
+  Future<List<StarterPackItem>> listStarterPackItems(String packId) {
+    return (select(starterPackItems)..where((t) => t.packId.equals(packId)))
+        .get();
   }
 
   Future<void> upsertStoreItem(StoreItemsCompanion row) {

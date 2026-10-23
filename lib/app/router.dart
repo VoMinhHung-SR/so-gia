@@ -8,6 +8,7 @@ import '../features/pricing/compare_items_screen.dart';
 import '../features/ref_prices/ref_price_lookup_screen.dart';
 import '../features/scan/pending_supplements_screen.dart';
 import '../features/scan/scan_screen.dart';
+import '../features/settings/about_sources_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/suppliers/suppliers_screen.dart';
 
@@ -34,6 +35,10 @@ GoRouter buildAppRouter({bool startOnScan = false}) {
       GoRoute(
         path: '/settings',
         builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: '/about-sources',
+        builder: (context, state) => const AboutSourcesScreen(),
       ),
       GoRoute(
         path: '/backup',

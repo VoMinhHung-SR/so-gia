@@ -1,0 +1,7 @@
+name,brand,barcode,size_text,category_id,is_weighed,pack_ids,source_note
+Bánh quy bơ,Cosy,,300 g,banh-keo,false,tap-hoa,seed VN grocery
+Snack khoai tây chiên,Ostar,,95 g,banh-keo,false,tap-hoa,seed VN grocery
+Bánh Choco-Pie,Orion,,12 piece,banh-keo,false,tap-hoa,seed VN grocery
+Kẹo sữa,Alpenliebe,,100 g,banh-keo,false,tap-hoa,seed VN grocery
+Snack bắp,Poca,,40 g,banh-keo,false,tap-hoa,seed VN grocery
+Bánh mì sandwich,Kinh Đô,,300 g,banh-keo,false,tap-hoa,seed VN grocery
