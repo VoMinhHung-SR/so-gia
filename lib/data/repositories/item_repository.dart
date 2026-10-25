@@ -1,14 +1,15 @@
-import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/ids.dart';
 import '../../core/vietnamese.dart';
 import '../db/app_database.dart';
+import '../db/category_seed.dart';
 import '../db/database_provider.dart';
-import '../db/tables.dart'; // UnitType, ItemSource
+import '../db/tables.dart';
+import '../models/store_item_view.dart';
 import '../off/open_food_facts_client.dart';
+import 'store_repository.dart';
 
-export '../db/app_database.dart' show Item, Purchase;
+export '../models/store_item_view.dart' show Item;
 
 final openFoodFactsClientProvider = Provider<OpenFoodFactsClient>((ref) {
   final client = OpenFoodFactsClient();
@@ -24,7 +25,8 @@ final itemRepositoryProvider = Provider<ItemRepository>((ref) {
 });
 
 final itemsStreamProvider = StreamProvider<List<Item>>((ref) {
-  return ref.watch(databaseProvider).watchActiveItems();
+  final storeId = ref.watch(currentStoreIdProvider);
+  return ref.watch(databaseProvider).watchActiveItems(storeId);
 });
 
 class ItemRepository {
@@ -33,73 +35,80 @@ class ItemRepository {
   final AppDatabase _db;
   final OpenFoodFactsClient _off;
 
-  Stream<List<Item>> watchItems() => _db.watchActiveItems();
+  Stream<List<Item>> watchItems(String storeId) =>
+      _db.watchActiveItems(storeId);
 
-  Future<List<Item>> search(String query) async {
-    final all = await _db.listActiveItems();
+  Future<List<Item>> search(String storeId, String query) async {
+    final all = await _db.listActiveItems(storeId);
     final q = query.trim();
     if (q.isEmpty) return all;
 
-    // Exact barcode hit first.
-    final byBarcode = await _db.getItemByBarcode(q);
+    final byBarcode = await _db.getItemByBarcode(storeId, q);
     if (byBarcode != null) return [byBarcode];
 
     return all.where((item) {
       final bag = [
-        item.name,
+        item.resolvedName,
         item.brand ?? '',
         item.barcode ?? '',
         item.category ?? '',
+        item.categoryId,
       ].join(' ');
-      return matchesSearch(bag, q);
+      return matchesSearchTokens(bag, q);
     }).toList();
   }
 
   Future<Item?> getById(String id) => _db.getItemById(id);
 
-  Future<Item?> getByBarcode(String barcode) => _db.getItemByBarcode(barcode);
+  Future<Item?> getByBarcode(String storeId, String barcode) =>
+      _db.getItemByBarcode(storeId, barcode);
 
   Future<Item> saveItem({
+    required String storeId,
     String? id,
+    String? catalogId,
     String? barcode,
     required String name,
     String? brand,
     double? unitSize,
     required UnitType unitType,
     String? category,
+    String? categoryId,
+    String? displayName,
     bool isWeighed = false,
-    ItemSource source = ItemSource.manual,
-    String? imageUrl,
-  }) async {
-    final now = DateTime.now().toUtc();
-    final itemId = id ?? newId();
-    final existing = id == null ? null : await _db.getItemById(id);
-
-    final row = ItemsCompanion(
-      id: Value(itemId),
-      barcode: Value(barcode?.trim().isEmpty == true ? null : barcode?.trim()),
-      name: Value(name.trim()),
-      brand: Value(brand?.trim().isEmpty == true ? null : brand?.trim()),
-      unitSize: Value(unitSize),
-      unitType: Value(unitType),
-      category: Value(category?.trim().isEmpty == true ? null : category?.trim()),
-      isWeighed: Value(isWeighed),
-      source: Value(source),
-      imageUrl: Value(imageUrl),
-      createdAt: Value(existing?.createdAt ?? now),
-      updatedAt: Value(now),
-      deletedAt: const Value(null),
+    CatalogSource source = CatalogSource.user,
+  }) {
+    final resolvedCategoryId = categoryId ?? mapLegacyCategoryId(category);
+    return _db.saveStoreItem(
+      storeId: storeId,
+      storeItemId: id,
+      catalogId: catalogId,
+      barcode: barcode,
+      name: name,
+      brand: brand,
+      unitSize: unitSize,
+      unitType: unitType,
+      categoryId: resolvedCategoryId,
+      displayName: displayName,
+      isWeighed: isWeighed,
+      source: source,
     );
-    await _db.upsertItem(row);
-    return (await _db.getItemById(itemId))!;
   }
 
-  /// After a barcode read: local hit, else OFF prefill map, else empty draft.
-  Future<BarcodeResolveResult> resolveBarcode(String barcode) async {
+  /// Resolve order (P7.5): store item → catalog (not in store) → OFF → unknown.
+  Future<BarcodeResolveResult> resolveBarcode(
+    String storeId,
+    String barcode,
+  ) async {
     final code = barcode.trim();
-    final local = await _db.getItemByBarcode(code);
-    if (local != null) {
-      return BarcodeResolveResult.foundLocal(local);
+    final inStore = await _db.getItemByBarcode(storeId, code);
+    if (inStore != null) {
+      return BarcodeResolveResult.foundLocal(inStore);
+    }
+
+    final inCatalog = await _db.getCatalogByBarcode(code);
+    if (inCatalog != null) {
+      return BarcodeResolveResult.foundCatalog(inCatalog);
     }
 
     final off = await _off.fetchByBarcode(code);
@@ -117,6 +126,8 @@ sealed class BarcodeResolveResult {
   const BarcodeResolveResult();
 
   factory BarcodeResolveResult.foundLocal(Item item) = FoundLocal;
+  factory BarcodeResolveResult.foundCatalog(CatalogProduct product) =
+      FoundCatalog;
   factory BarcodeResolveResult.fromOff(OffProduct product) = PrefillFromOff;
   factory BarcodeResolveResult.unknown(String barcode) = UnknownBarcode;
 }
@@ -124,6 +135,11 @@ sealed class BarcodeResolveResult {
 class FoundLocal extends BarcodeResolveResult {
   const FoundLocal(this.item);
   final Item item;
+}
+
+class FoundCatalog extends BarcodeResolveResult {
+  const FoundCatalog(this.product);
+  final CatalogProduct product;
 }
 
 class PrefillFromOff extends BarcodeResolveResult {

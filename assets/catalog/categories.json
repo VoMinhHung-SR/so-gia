@@ -1,0 +1,25 @@
+{
+  "categories_version": 1,
+  "note": "id is stable slug — do not rename after release. margin_pct is initial suggestion only.",
+  "categories": [
+    {"sort": 1, "id": "dau-an", "name": "Dầu ăn", "is_weighed": false, "margin_pct": 10},
+    {"sort": 2, "id": "nuoc-cham", "name": "Nước mắm, nước tương, nước chấm", "is_weighed": false, "margin_pct": 12},
+    {"sort": 3, "id": "gia-vi-goi", "name": "Gia vị gói, hạt nêm, bột ngọt", "is_weighed": false, "margin_pct": 15},
+    {"sort": 4, "id": "gia-vi-can", "name": "Gia vị cân / bán lẻ", "is_weighed": true, "margin_pct": 25},
+    {"sort": 5, "id": "gao-bot", "name": "Gạo, bột, đồ khô", "is_weighed": false, "margin_pct": 8},
+    {"sort": 6, "id": "mi-chao", "name": "Mì, cháo, phở ăn liền", "is_weighed": false, "margin_pct": 10},
+    {"sort": 7, "id": "sua", "name": "Sữa và sản phẩm từ sữa", "is_weighed": false, "margin_pct": 8},
+    {"sort": 8, "id": "nuoc-giai-khat", "name": "Nước giải khát", "is_weighed": false, "margin_pct": 15},
+    {"sort": 9, "id": "banh-keo", "name": "Bánh kẹo, snack", "is_weighed": false, "margin_pct": 15},
+    {"sort": 10, "id": "rau-cu", "name": "Rau, củ", "is_weighed": true, "margin_pct": 30},
+    {"sort": 11, "id": "trai-cay", "name": "Trái cây", "is_weighed": true, "margin_pct": 25},
+    {"sort": 12, "id": "thit", "name": "Thịt", "is_weighed": true, "margin_pct": 12},
+    {"sort": 13, "id": "ca-hai-san", "name": "Cá, tôm, hải sản", "is_weighed": true, "margin_pct": 15},
+    {"sort": 14, "id": "trung", "name": "Trứng", "is_weighed": false, "margin_pct": 8},
+    {"sort": 15, "id": "dong-lanh", "name": "Đồ đông lạnh, chế biến sẵn", "is_weighed": false, "margin_pct": 12},
+    {"sort": 16, "id": "giat-tay", "name": "Giặt giũ, vệ sinh nhà cửa", "is_weighed": false, "margin_pct": 15},
+    {"sort": 17, "id": "giay-tui", "name": "Giấy, túi, đồ dùng một lần", "is_weighed": false, "margin_pct": 15},
+    {"sort": 18, "id": "cham-soc-ca-nhan", "name": "Chăm sóc cá nhân", "is_weighed": false, "margin_pct": 15},
+    {"sort": 99, "id": "khac", "name": "Khác", "is_weighed": false, "margin_pct": 20}
+  ]
+}

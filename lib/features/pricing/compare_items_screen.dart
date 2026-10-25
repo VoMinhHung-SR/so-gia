@@ -63,7 +63,10 @@ class _CompareItemsScreenState extends ConsumerState<CompareItemsScreen> {
                     ? items
                     : items
                         .where(
-                          (i) => matchesSearch(i.category ?? i.name, q),
+                          (i) => matchesSearch(
+                            i.category ?? i.resolvedName,
+                            q,
+                          ),
                         )
                         .toList();
                 if (filtered.isEmpty) {
@@ -88,7 +91,7 @@ class _CompareItemsScreenState extends ConsumerState<CompareItemsScreen> {
                                 unitType: item.unitType,
                               );
                         return ListTile(
-                          title: Text(item.name),
+                          title: Text(item.resolvedName),
                           subtitle: Text(
                             [
                               if (price != null) formatVnd(price),

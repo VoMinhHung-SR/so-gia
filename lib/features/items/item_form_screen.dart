@@ -1,10 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../data/db/app_database.dart';
 import '../../data/db/tables.dart';
 import '../../data/off/open_food_facts_client.dart';
+import '../../data/repositories/catalog_repository.dart';
 import '../../data/repositories/item_repository.dart';
+import '../../data/repositories/store_repository.dart';
 
 class ItemFormArgs {
   const ItemFormArgs({
@@ -39,16 +44,79 @@ class _ItemFormScreenState extends ConsumerState<ItemFormScreen> {
 
   UnitType _unitType = UnitType.piece;
   bool _isWeighed = false;
-  ItemSource _source = ItemSource.manual;
-  String? _imageUrl;
+  CatalogSource _source = CatalogSource.user;
   String? _existingId;
+  String? _catalogId;
   bool _loading = false;
   bool _saving = false;
+  Timer? _duplicateDebounce;
+  List<CatalogProduct> _duplicateSuggestions = [];
+  bool _loadingDuplicates = false;
 
   @override
   void initState() {
     super.initState();
+    _name.addListener(_onNameChanged);
     _bootstrap();
+  }
+
+  void _onNameChanged() {
+    if (_existingId != null) return;
+    _duplicateDebounce?.cancel();
+    _duplicateDebounce = Timer(const Duration(milliseconds: 300), () {
+      _fetchDuplicateSuggestions(_name.text);
+    });
+  }
+
+  Future<void> _fetchDuplicateSuggestions(String raw) async {
+    final name = raw.trim();
+    if (name.length < 2) {
+      if (mounted) setState(() => _duplicateSuggestions = []);
+      return;
+    }
+    setState(() => _loadingDuplicates = true);
+    try {
+      final hits = await ref
+          .read(catalogRepositoryProvider)
+          .suggestDuplicates(name, limit: 5);
+      if (!mounted) return;
+      setState(() => _duplicateSuggestions = hits);
+    } finally {
+      if (mounted) setState(() => _loadingDuplicates = false);
+    }
+  }
+
+  Future<void> _applyDuplicate(CatalogProduct product) async {
+    final storeId = ref.read(currentStoreIdProvider);
+    try {
+      await ref.read(catalogRepositoryProvider).addToStore(
+            storeId: storeId,
+            catalogId: product.id,
+          );
+      if (!mounted) return;
+      context.pop();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Không thêm được: $e')),
+      );
+    }
+  }
+
+  void _fillFromCatalog(CatalogProduct product) {
+    setState(() {
+      _catalogId = product.id;
+      _name.text = product.name;
+      _brand.text = product.brand ?? '';
+      _barcode.text = product.barcode ?? _barcode.text;
+      if (product.unitSize != null) {
+        _unitSize.text = product.unitSize.toString();
+      }
+      _unitType = product.unitType;
+      _isWeighed = product.isWeighed;
+      _source = product.source;
+      _duplicateSuggestions = [];
+    });
   }
 
   Future<void> _bootstrap() async {
@@ -58,7 +126,8 @@ class _ItemFormScreenState extends ConsumerState<ItemFormScreen> {
       final item = await ref.read(itemRepositoryProvider).getById(args.editId!);
       if (item != null && mounted) {
         _existingId = item.id;
-        _name.text = item.name;
+        _catalogId = item.catalogId;
+        _name.text = item.resolvedName;
         _brand.text = item.brand ?? '';
         _barcode.text = item.barcode ?? '';
         _unitSize.text = item.unitSize?.toString() ?? '';
@@ -66,7 +135,6 @@ class _ItemFormScreenState extends ConsumerState<ItemFormScreen> {
         _unitType = item.unitType;
         _isWeighed = item.isWeighed;
         _source = item.source;
-        _imageUrl = item.imageUrl;
       }
       if (mounted) setState(() => _loading = false);
       return;
@@ -88,13 +156,14 @@ class _ItemFormScreenState extends ConsumerState<ItemFormScreen> {
       _brand.text = off.brand ?? '';
       if (off.unitSize != null) _unitSize.text = off.unitSize.toString();
       if (off.unitType != null) _unitType = off.unitType!;
-      _imageUrl = off.imageUrl;
-      _source = ItemSource.off;
+      _source = CatalogSource.off;
     }
   }
 
   @override
   void dispose() {
+    _duplicateDebounce?.cancel();
+    _name.removeListener(_onNameChanged);
     _name.dispose();
     _brand.dispose();
     _barcode.dispose();
@@ -111,8 +180,11 @@ class _ItemFormScreenState extends ConsumerState<ItemFormScreen> {
       final sizeRaw = _unitSize.text.trim();
       final size = sizeRaw.isEmpty ? null : double.tryParse(sizeRaw.replaceAll(',', '.'));
 
+      final storeId = ref.read(currentStoreIdProvider);
       final item = await ref.read(itemRepositoryProvider).saveItem(
+            storeId: storeId,
             id: _existingId,
+            catalogId: _catalogId,
             barcode: _barcode.text,
             name: _name.text,
             brand: _brand.text,
@@ -121,7 +193,6 @@ class _ItemFormScreenState extends ConsumerState<ItemFormScreen> {
             category: _category.text,
             isWeighed: _isWeighed,
             source: _source,
-            imageUrl: _imageUrl,
           );
 
       if (!mounted) return;
@@ -141,7 +212,7 @@ class _ItemFormScreenState extends ConsumerState<ItemFormScreen> {
     final isEdit = _existingId != null;
     return Scaffold(
       appBar: AppBar(
-        title: Text(isEdit ? 'Sửa mặt hàng' : 'Thêm mặt hàng'),
+        title: Text(isEdit ? 'Sửa mặt hàng' : 'Tạo hàng mới'),
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
@@ -160,6 +231,39 @@ class _ItemFormScreenState extends ConsumerState<ItemFormScreen> {
                     validator: (v) =>
                         (v == null || v.trim().isEmpty) ? 'Nhập tên' : null,
                   ),
+                  if (!isEdit &&
+                      (_duplicateSuggestions.isNotEmpty || _loadingDuplicates))
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            'Có thể trùng',
+                            style: Theme.of(context).textTheme.labelLarge,
+                          ),
+                          if (_loadingDuplicates)
+                            const LinearProgressIndicator(minHeight: 2),
+                          ..._duplicateSuggestions.map(
+                            (p) => ListTile(
+                              dense: true,
+                              contentPadding: EdgeInsets.zero,
+                              title: Text(p.name),
+                              subtitle: Text(
+                                [
+                                  if (p.brand != null && p.brand!.isNotEmpty)
+                                    p.brand!,
+                                  if (p.barcode != null) p.barcode!,
+                                ].join(' · '),
+                              ),
+                              trailing: const Icon(Icons.chevron_right),
+                              onTap: () => _applyDuplicate(p),
+                              onLongPress: () => _fillFromCatalog(p),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _brand,

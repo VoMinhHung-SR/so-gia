@@ -1,0 +1,7 @@
+name,brand,barcode,size_text,category_id,is_weighed,pack_ids,source_note
+Xúc xích heo,Vissan,,500 g,dong-lanh,false,tap-hoa,seed VN grocery
+Chả lụa,Đức Việt,,500 g,dong-lanh,false,tap-hoa,seed VN grocery
+Chả giò,Cầu Tre,,400 g,dong-lanh,false,tap-hoa,seed VN grocery
+Cá viên,,,500 g,dong-lanh,false,tap-hoa,seed VN grocery
+Há cảo tôm,,,400 g,dong-lanh,false,tap-hoa,seed VN grocery
+Thanh cua,,,250 g,dong-lanh,false,tap-hoa,seed VN grocery

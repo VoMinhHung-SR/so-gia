@@ -1,0 +1,9 @@
+name,brand,barcode,size_text,category_id,is_weighed,pack_ids,source_note
+Dầu đậu nành,Neptune,,1 l,dau-an,false,tap-hoa,seed VN grocery
+Dầu oliu,La Môn,,0.5 l,dau-an,false,tap-hoa,seed VN grocery
+Dầu ăn hướng dương,Simply,,1 l,dau-an,false,tap-hoa,seed VN grocery
+Dầu đậu nành,Tường An,,1 l,dau-an,false,tap-hoa,seed VN grocery
+Dầu ăn hạt cải,Simply,,1 l,dau-an,false,tap-hoa,seed VN grocery
+Dầu mè,Ottogi,,250 ml,dau-an,false,tap-hoa,seed VN grocery
+Dầu oliu nguyên chất,Filippo Berio,,250 ml,dau-an,false,tap-hoa,seed VN grocery
+Dầu ăn,Happy Kitchen,,2 l,dau-an,false,tap-hoa,seed VN grocery

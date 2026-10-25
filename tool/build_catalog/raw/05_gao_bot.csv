@@ -1,0 +1,11 @@
+name,brand,barcode,size_text,category_id,is_weighed,pack_ids,source_note
+Gạo ST25,Gạo Việt,,5 kg,gao-bot,false,tap-hoa,seed VN grocery
+Bột mì đa dụng,Meizan,,1 kg,gao-bot,false,tap-hoa,seed VN grocery
+Gạo tám thơm,Vinh Hiển,,5 kg,gao-bot,false,tap-hoa,seed VN grocery
+Gạo Japonica,Nguyên Cám,,2 kg,gao-bot,false,tap-hoa,seed VN grocery
+Bột năng,Tấn Hưng,,500 g,gao-bot,false,tap-hoa,seed VN grocery
+Bột bắp,Meizan,,500 g,gao-bot,false,tap-hoa,seed VN grocery
+Miến Dong,Dong,,500 g,gao-bot,false,tap-hoa,seed VN grocery
+Bún khô,Sa Đéc,,500 g,gao-bot,false,tap-hoa,seed VN grocery
+Đậu xanh,,,1 kg,gao-bot,false,tap-hoa,seed VN grocery
+Nấm hương khô,,,200 g,gao-bot,false,tap-hoa,seed VN grocery

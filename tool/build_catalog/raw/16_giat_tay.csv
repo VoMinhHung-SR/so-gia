@@ -1,0 +1,9 @@
+name,brand,barcode,size_text,category_id,is_weighed,pack_ids,source_note
+Nước giặt,Omo,,2.7 l,giat-tay,false,tap-hoa,seed VN grocery
+Nước rửa chén,Sunlight,,750 ml,giat-tay,false,tap-hoa,seed VN grocery
+Nước xả vải,Comfort,,1.8 l,giat-tay,false,tap-hoa,seed VN grocery
+Bột giặt,Ariel,,2.5 kg,giat-tay,false,tap-hoa,seed VN grocery
+Nước lau sàn,Gift,,1 l,giat-tay,false,tap-hoa,seed VN grocery
+Nước tẩy toilet,Duck,,500 ml,giat-tay,false,tap-hoa,seed VN grocery
+Nước rửa tay,Lifebuoy,,500 ml,giat-tay,false,tap-hoa,seed VN grocery
+Nước lau kính,Gift,,500 ml,giat-tay,false,tap-hoa,seed VN grocery

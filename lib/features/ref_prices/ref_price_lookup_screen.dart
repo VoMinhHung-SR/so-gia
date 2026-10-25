@@ -57,7 +57,7 @@ class _RefPriceLookupScreenState extends ConsumerState<RefPriceLookupScreen> {
     final item = _item;
     if (item == null) return '';
     final parts = [
-      item.name,
+      item.resolvedName,
       if (item.brand != null) item.brand!,
       if (item.unitSize != null) '${item.unitSize}${item.unitType.name}',
     ];
@@ -106,10 +106,18 @@ class _RefPriceLookupScreenState extends ConsumerState<RefPriceLookupScreen> {
     }
     final size = double.tryParse(_sizeCtrl.text.replaceAll(',', '.'));
 
+    final catalogId = _item?.catalogId;
+    if (catalogId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Không tìm thấy mặt hàng')),
+      );
+      return;
+    }
+
     setState(() => _saving = true);
     try {
       await ref.read(refPriceRepositoryProvider).save(
-            itemId: widget.itemId,
+            catalogId: catalogId,
             source: _source.refSource,
             price: price,
             unitSize: size,

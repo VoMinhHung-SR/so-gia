@@ -1,0 +1,7 @@
+name,brand,barcode,size_text,category_id,is_weighed,pack_ids,source_note
+Sữa rửa mặt dịu nhẹ,Cetaphil,,235 ml,cham-soc-ca-nhan,false,tap-hoa,seed VN grocery
+Dầu gội,Clear,,650 ml,cham-soc-ca-nhan,false,tap-hoa,seed VN grocery
+Sữa tắm,Dove,,500 ml,cham-soc-ca-nhan,false,tap-hoa,seed VN grocery
+Kem đánh răng,P/S,,180 g,cham-soc-ca-nhan,false,tap-hoa,seed VN grocery
+Bàn chải đánh răng,Oral-B,,1 piece,cham-soc-ca-nhan,false,tap-hoa,seed VN grocery
+Xà phòng cục,Lifebuoy,,90 g,cham-soc-ca-nhan,false,tap-hoa,seed VN grocery
